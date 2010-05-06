@@ -1,0 +1,10 @@
+[assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
+[assembly: System.Reflection.AssemblyTrademark("")]
+[assembly: System.Reflection.AssemblyCopyright("Copyright © Hexasystems Corporation 2010")]
+[assembly: System.Reflection.AssemblyProduct("netDumbster")]
+[assembly: System.Reflection.AssemblyCompany("Hexasystems Corporation")]
+[assembly: System.Reflection.AssemblyConfiguration("")]
+[assembly: System.Reflection.AssemblyDescription("")]
+[assembly: System.Reflection.AssemblyTitle("netDumbster")]
+[assembly: System.Runtime.CompilerServices.CompilationRelaxations(8)]
+
