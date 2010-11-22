@@ -38,8 +38,8 @@ namespace netDumbster.smtp
 		{
 			string[] parts = Regex.Split( data, DOUBLE_NEWLINE );
 
-			headerData = parts[0] + DOUBLE_NEWLINE;
-			bodyData = parts[1] + DOUBLE_NEWLINE;					
+			headerData = parts[0];
+			bodyData = parts[1];					
 		}
 		
 		#endregion
@@ -62,6 +62,7 @@ namespace netDumbster.smtp
 				return headerFields;
 			}
 		}
+
 		/// <summary>
 		/// The raw text that represents the header of the mime part.
 		/// </summary>

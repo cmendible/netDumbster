@@ -11,6 +11,9 @@ using log4net;
 
 namespace netDumbster.smtp
 {
+    /// <summary>
+    /// Simple Smtp Server
+    /// </summary>
 	public class SimpleSmtpServer
 	{
 		#region Variables

@@ -1,6 +1,6 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 10.00
-# Visual Studio 2008
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{E7830768-AF0D-4B2A-94F0-F3F0A1307926}"
 	ProjectSection(SolutionItems) = preProject
 		libs\Gallio\Gallio.dll = libs\Gallio\Gallio.dll

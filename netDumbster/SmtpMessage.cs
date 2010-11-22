@@ -144,14 +144,14 @@ namespace netDumbster.smtp
 			string headerKey = null;
 			foreach( Match headerKeyMatch in headerKeyCollectionMatch )
 			{
-			  headerKey = headerKeyMatch.Result( "${key}" );
-        Match valueMatch = Regex.Match( headerString, headerKey + @":(?<value>.*?)\r\n[\S\r]", RegexOptions.Singleline );
+			    headerKey = headerKeyMatch.Result( "${key}" );
+                Match valueMatch = Regex.Match( headerString, headerKey + @":(?<value>.*?)\r\n[\S\r]", RegexOptions.Singleline );
 				if( valueMatch.Success )
 				{
 					string headerValue = valueMatch.Result( "${value}" ).Trim();
 					headerValue = Regex.Replace( headerValue, "\r\n", "" );
 					headerValue = Regex.Replace( headerValue, @"\s+", " " );
-				  // TODO: Duplicate headers (like Received) will be overwritten by the 'last' value.					
+				    // TODO: Duplicate headers (like Received) will be overwritten by the 'last' value.					
 					headerFields[ headerKey] = headerValue;
 				}
 			}
@@ -165,42 +165,46 @@ namespace netDumbster.smtp
 			string contentType = (string) Headers["Content-Type"];
 
 			// Check to see if it is a Multipart Messages
-			if( contentType != null && Regex.Match( contentType, "multipart/mixed", RegexOptions.IgnoreCase ).Success )
-			{
-				// Message parts are seperated by boundries.  Parse out what the boundry is so we can easily
-				// parse the parts out of the message.
-				Match boundryMatch = Regex.Match( contentType, "boundary=\"(?<boundry>\\S+)\"", RegexOptions.IgnoreCase );
-				if( boundryMatch.Success )
-				{
-					string boundry = boundryMatch.Result( "${boundry}" );
+            if (contentType != null && Regex.Match(contentType, "multipart/mixed", RegexOptions.IgnoreCase).Success)
+            {
+                // Message parts are seperated by boundries.  Parse out what the boundry is so we can easily
+                // parse the parts out of the message.
+                Match boundryMatch = Regex.Match(contentType, "boundary=\"(?<boundry>\\S+)\"", RegexOptions.IgnoreCase);
+                if (boundryMatch.Success)
+                {
+                    string boundry = boundryMatch.Result("${boundry}");
 
-					ArrayList messageParts = new ArrayList();
+                    ArrayList messageParts = new ArrayList();
 
-					//TODO Improve this Regex.
-					MatchCollection matches = Regex.Matches( message, "--" + boundry + ".*\r\n" );
+                    //TODO Improve this Regex.
+                    MatchCollection matches = Regex.Matches(message, "--" + boundry + ".*\r\n");
 
-					int lastIndex = -1;			
-					int currentIndex = -1;
-					int matchLength = -1;
-					string messagePartText = null;
-					foreach( Match match in matches )
-					{
-						currentIndex = match.Index;
-						matchLength = match.Length;
-				
-						if( lastIndex != -1 )
-						{
-							messagePartText = message.Substring( lastIndex, currentIndex - lastIndex );
-							messageParts.Add( new SmtpMessagePart( messagePartText ) );				
-						}
+                    int lastIndex = -1;
+                    int currentIndex = -1;
+                    int matchLength = -1;
+                    string messagePartText = null;
+                    foreach (Match match in matches)
+                    {
+                        currentIndex = match.Index;
+                        matchLength = match.Length;
 
-						lastIndex = currentIndex + matchLength;
-					}
-			
-					return (SmtpMessagePart[]) messageParts.ToArray( typeof( SmtpMessagePart ) );
-				}
-			}
-	    return new SmtpMessagePart[0];
+                        if (lastIndex != -1)
+                        {
+                            messagePartText = message.Substring(lastIndex, currentIndex - lastIndex);
+                            messageParts.Add(new SmtpMessagePart(messagePartText));
+                        }
+
+                        lastIndex = currentIndex + matchLength;
+                    }
+
+                    return (SmtpMessagePart[])messageParts.ToArray(typeof(SmtpMessagePart));
+                }
+            }
+            else
+            {
+                return new SmtpMessagePart[] { new SmtpMessagePart(data.ToString()) };
+            }
+	        return new SmtpMessagePart[0];
 	  }
 
 	  #endregion
