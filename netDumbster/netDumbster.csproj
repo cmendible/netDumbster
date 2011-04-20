@@ -150,6 +150,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="netDumbster.snk" />
+    <None Include="NuGet\netDumbster.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

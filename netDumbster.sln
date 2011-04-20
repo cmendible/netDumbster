@@ -8,6 +8,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{E7830768-A
 		libs\log4net\log4net.dll = libs\log4net\log4net.dll
 		libs\Gallio\MbUnit.dll = libs\Gallio\MbUnit.dll
 		libs\Gallio\MbUnit.pdb = libs\Gallio\MbUnit.pdb
+		libs\NuGet\NuGet.exe = libs\NuGet\NuGet.exe
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netDumbster", "netDumbster\netDumbster.csproj", "{6389D8DE-467B-49C1-B996-D9D033E7834F}"
