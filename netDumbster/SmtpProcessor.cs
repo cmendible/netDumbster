@@ -182,6 +182,9 @@ namespace netDumbster.smtp
 		/// </summary>
 		public void Stop()
 		{
+            if (_Context == null)
+                return;
+
 			_Log.Debug("trying to stop processor.");
 			_Log.Debug("Shutting down Socket.");
 			_Context.Socket.Shutdown(SocketShutdown.Both);
