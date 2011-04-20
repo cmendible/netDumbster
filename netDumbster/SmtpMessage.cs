@@ -58,9 +58,42 @@ namespace netDumbster.smtp
 		    {
 		      headerFields = ParseHeaders( data.ToString() );
 		    }
-				return headerFields;
+		    return headerFields;
 		  }
-		}		
+		}
+
+        public string XPriority
+        {
+            get
+            {
+                if (Headers.ContainsKey("X-Priority"))
+                    return Headers["X-Priority"].ToString();
+                else
+                    return string.Empty;
+            }
+        }
+
+        public string Priority
+        {
+            get
+            {
+                if (Headers.ContainsKey("Priority"))
+                    return Headers["Priority"].ToString();
+                else
+                    return string.Empty;
+            }
+        }
+
+        public string Importance
+        {
+            get
+            {
+                if (Headers.ContainsKey("Importance"))
+                    return Headers["Importance"].ToString();
+                else
+                    return string.Empty;
+            }
+        }
 
 		/// <summary>
 		/// The email address of the person

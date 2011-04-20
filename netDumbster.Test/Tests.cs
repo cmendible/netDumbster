@@ -41,6 +41,9 @@ namespace netDumbster.Test
             var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
             mailMessage.IsBodyHtml = isBodyHtml;
 
+            if (isBodyHtml)
+                mailMessage.Body = "this is the html body";
+
             if (smtpAuth)
             {
                 NetworkCredential credentials = new NetworkCredential("user", "pwd");
@@ -116,6 +119,22 @@ namespace netDumbster.Test
             SendMail(false, true, null);
             Assert.AreEqual(1, _Server.ReceivedEmailCount);
             Assert.AreEqual("this is the html body", _Server.ReceivedEmail[0].MessageParts[0].BodyData);
+        }
+
+        [Test]
+        public void Send_Email_With_Priority()
+        {
+            SmtpClient client = new SmtpClient("localhost", _Server.Port);
+            var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
+            mailMessage.IsBodyHtml = false;
+            mailMessage.Priority = MailPriority.High;
+
+            client.Send(mailMessage);
+            Assert.AreEqual(1, _Server.ReceivedEmailCount);
+            Assert.AreEqual("this is the body", _Server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.AreEqual("1", _Server.ReceivedEmail[0].XPriority);
+            Assert.AreEqual("1", _Server.ReceivedEmail[0].Priority);
+            Assert.AreEqual("high", _Server.ReceivedEmail[0].Importance);
         }
 
         [Test]
