@@ -1,0 +1,42 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libs", "libs", "{E7830768-AF0D-4B2A-94F0-F3F0A1307926}"
+	ProjectSection(SolutionItems) = preProject
+		libs\Gallio\Gallio.dll = libs\Gallio\Gallio.dll
+		libs\Gallio\Gallio.pdb = libs\Gallio\Gallio.pdb
+		libs\log4net\log4net.dll = libs\log4net\log4net.dll
+		libs\Gallio\MbUnit.dll = libs\Gallio\MbUnit.dll
+		libs\Gallio\MbUnit.pdb = libs\Gallio\MbUnit.pdb
+		libs\NuGet\NuGet.exe = libs\NuGet\NuGet.exe
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netDumbster", "netDumbster\netDumbster.csproj", "{6389D8DE-467B-49C1-B996-D9D033E7834F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netDumbster.Test", "netDumbster.Test\netDumbster.Test.csproj", "{A610E630-898F-4050-8655-5C7915637956}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "netDumbster.Sample", "netDumbster.Sample\netDumbster.Sample.csproj", "{4AD02E50-A368-4CC8-9517-93534694B857}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6389D8DE-467B-49C1-B996-D9D033E7834F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6389D8DE-467B-49C1-B996-D9D033E7834F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6389D8DE-467B-49C1-B996-D9D033E7834F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6389D8DE-467B-49C1-B996-D9D033E7834F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A610E630-898F-4050-8655-5C7915637956}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A610E630-898F-4050-8655-5C7915637956}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A610E630-898F-4050-8655-5C7915637956}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A610E630-898F-4050-8655-5C7915637956}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4AD02E50-A368-4CC8-9517-93534694B857}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4AD02E50-A368-4CC8-9517-93534694B857}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4AD02E50-A368-4CC8-9517-93534694B857}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4AD02E50-A368-4CC8-9517-93534694B857}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
