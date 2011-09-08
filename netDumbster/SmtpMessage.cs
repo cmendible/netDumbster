@@ -202,7 +202,7 @@ namespace netDumbster.smtp
             {
                 // Message parts are seperated by boundries.  Parse out what the boundry is so we can easily
                 // parse the parts out of the message.
-                Match boundryMatch = Regex.Match(contentType, "boundary=\"(?<boundry>\\S+)\"", RegexOptions.IgnoreCase);
+                Match boundryMatch = Regex.Match(contentType, "boundary=(?<boundry>\\S+)", RegexOptions.IgnoreCase);
                 if (boundryMatch.Success)
                 {
                     string boundry = boundryMatch.Result("${boundry}");

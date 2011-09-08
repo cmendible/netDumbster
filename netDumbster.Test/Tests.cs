@@ -140,9 +140,15 @@ namespace netDumbster.Test
         [Test]
         public void Send_Email_With_Attachment()
         {
-            //SendMail(false, true, new byte[] { 0x1 });
-            //Assert.AreEqual(1, _Server.ReceivedEmailCount);
-            //Assert.AreEqual("this is the html body", _Server.ReceivedEmail[0].MessageParts[0].BodyData);
+            var data = new byte[] { 0x1 };
+
+            SendMail(false, true, data);
+            Assert.AreEqual(1, _Server.ReceivedEmailCount);
+            Assert.AreEqual("this is the html body\r\n", _Server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.IsNotNull(_Server.ReceivedEmail[0].MessageParts[1]);
+            Assert.IsNotNull(_Server.ReceivedEmail[0].MessageParts[1].BodyData);
+            Assert.IsNotEmpty(_Server.ReceivedEmail[0].MessageParts[1].BodyData);
+            Assert.AreEqual(System.Convert.ToBase64String(data) + "\r\n", _Server.ReceivedEmail[0].MessageParts[1].BodyData);
         }
 	}
 }
