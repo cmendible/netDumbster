@@ -42,6 +42,10 @@ namespace netDumbster.smtp
 		/// Thread signal.
 		/// </summary>
 		internal AutoResetEvent _ClientConnected = null;
+		/// <summary>
+		/// Thread signal.
+		/// </summary>
+		internal AutoResetEvent _ServerReady = null;
 
 		#endregion
 
@@ -100,6 +104,7 @@ namespace netDumbster.smtp
 		{
 			Port = port;
 			_ClientConnected = new AutoResetEvent(false);
+			_ServerReady = new AutoResetEvent(false);
 			_Processor = new SmtpProcessor(string.Empty, receivedMail);
 		}
 
@@ -128,6 +133,7 @@ namespace netDumbster.smtp
 				_Log.Debug("Calling BeginAcceptSocket.");
 				_Listener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), _Listener);
 				_Log.Debug("BeginAcceptSocket called.");
+				_ServerReady.Set();
 				_ClientConnected.WaitOne();
 			}
 			catch (Exception ex)
@@ -184,6 +190,7 @@ namespace netDumbster.smtp
 		{
 			var server = new SimpleSmtpServer(port);
 			new Thread(new ThreadStart(server._Start)).Start();
+			server._ServerReady.WaitOne();
 			return server;
 		}
 

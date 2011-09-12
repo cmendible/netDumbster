@@ -17,7 +17,7 @@ namespace netDumbster.Test
 	[TestFixture]
 	public class Tests
 	{
-		private static SimpleSmtpServer _Server;
+		private SimpleSmtpServer _Server;
 		private Random _Rnd = new Random();
 
 		public Tests()
@@ -58,12 +58,6 @@ namespace netDumbster.Test
             client.Send(mailMessage);
         }
 
-		[FixtureSetUp]
-		public void FixtureSetUp()
-		{
-			_Server = SimpleSmtpServer.Start(_Rnd.Next(50000, 60000));
-		}
-
 		[FixtureTearDown]
 		public void FixtureTearDown()
 		{
@@ -73,6 +67,7 @@ namespace netDumbster.Test
 		[SetUp]
 		public void SetUp()
 		{
+            _Server = SimpleSmtpServer.Start(_Rnd.Next(50000, 60000));
 			_Server.ClearReceivedEmail();
 		}
 
@@ -150,5 +145,14 @@ namespace netDumbster.Test
             Assert.IsNotEmpty(_Server.ReceivedEmail[0].MessageParts[1].BodyData);
             Assert.AreEqual(System.Convert.ToBase64String(data) + "\r\n", _Server.ReceivedEmail[0].MessageParts[1].BodyData);
         }
+
+        [Test]
+        [Repeat(5)] // Test is run several several times since we're testing asynchronous behaviour
+        public void Send_Email_When_Server_Not_Running()
+        {
+            _Server.Stop();
+            Assert.Throws<SmtpException>(() => SendMail());
+        }
+
 	}
 }
