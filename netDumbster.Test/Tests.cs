@@ -58,7 +58,7 @@ namespace netDumbster.Test
             client.Send(mailMessage);
         }
 
-		[FixtureTearDown]
+        [TearDown]
 		public void FixtureTearDown()
 		{
 			_Server.Stop();

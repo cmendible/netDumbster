@@ -21,31 +21,31 @@ namespace netDumbster.smtp
 		/// <summary>
 		/// Logger
 		/// </summary>
-		ILog _Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		ILog _log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		/// <summary>
 		/// TCP Listener
 		/// </summary>
-		private TcpListener _Listener;
+		private TcpListener _tcpListener;
 
 		/// <summary>
 		/// Stores all of the email received since this instance started up.
 		/// </summary>
-		private List<SmtpMessage> receivedMail = new List<SmtpMessage>();
+		private List<SmtpMessage> _receivedMail = new List<SmtpMessage>();
 
 		/// <summary>
 		/// Smtp Processor
 		/// </summary>
-		private SmtpProcessor _Processor;
+		private SmtpProcessor _processor;
 
 		/// <summary>
 		/// Thread signal.
 		/// </summary>
-		internal AutoResetEvent _ClientConnected = null;
+		internal AutoResetEvent _clientConnected = null;
 		/// <summary>
 		/// Thread signal.
 		/// </summary>
-		internal AutoResetEvent _ServerReady = null;
+		internal AutoResetEvent _serverReady = null;
 
 		#endregion
 
@@ -66,7 +66,7 @@ namespace netDumbster.smtp
 			get
 			{
 				lock(this)
-					return this.receivedMail.ToArray();
+					return this._receivedMail.ToArray();
 			}
 		}
 
@@ -79,7 +79,7 @@ namespace netDumbster.smtp
 			get
 			{
 				lock (this)
-					return this.receivedMail.Count;
+					return this._receivedMail.Count;
 			}
 		}
 
@@ -89,7 +89,7 @@ namespace netDumbster.smtp
 		public void ClearReceivedEmail()
 		{
 			lock (this)
-				this.receivedMail.Clear();
+				this._receivedMail.Clear();
 		}
 
 		#endregion
@@ -103,9 +103,9 @@ namespace netDumbster.smtp
 		private SimpleSmtpServer(int port)
 		{
 			Port = port;
-			_ClientConnected = new AutoResetEvent(false);
-			_ServerReady = new AutoResetEvent(false);
-			_Processor = new SmtpProcessor(string.Empty, receivedMail);
+			_clientConnected = new AutoResetEvent(false);
+			_serverReady = new AutoResetEvent(false);
+			_processor = new SmtpProcessor(string.Empty, _receivedMail);
 		}
 
 		#endregion
@@ -117,32 +117,32 @@ namespace netDumbster.smtp
 		/// </summary>
 		internal void _Start()
 		{
-			_Log.Info("Starting Smtp server");
+			_log.Info("Starting Smtp server");
 
 			IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, Port);
-			_Listener = new TcpListener(endPoint);
-			_Listener.Start();
+			_tcpListener = new TcpListener(endPoint);
+			_tcpListener.Start();
 
-			_Log.DebugFormat("Started Tcp Listener at port {0}", Port);
+			_log.DebugFormat("Started Tcp Listener at port {0}", Port);
 
-			_ClientConnected.Set();
+			_clientConnected.Set();
 
 			try
 			{
-				_ClientConnected.Reset();
-				_Log.Debug("Calling BeginAcceptSocket.");
-				_Listener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), _Listener);
-				_Log.Debug("BeginAcceptSocket called.");
-				_ServerReady.Set();
-				_ClientConnected.WaitOne();
+				_clientConnected.Reset();
+				_log.Debug("Calling BeginAcceptSocket.");
+				_tcpListener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), _tcpListener);
+				_log.Debug("BeginAcceptSocket called.");
+				_serverReady.Set();
+				_clientConnected.WaitOne();
 			}
 			catch (Exception ex)
 			{
-				_Log.Warn("Unexpected Exception starting the SmtpServer.", ex);
+				_log.Warn("Unexpected Exception starting the SmtpServer.", ex);
 			}
 			finally
 			{
-				_ClientConnected.Set();
+				_clientConnected.Set();
 			}
 		}
 
@@ -152,28 +152,28 @@ namespace netDumbster.smtp
 		/// <param name="result">The result.</param>
 		private void _SocketHandler(IAsyncResult result)
 		{
-			_Log.Debug("Entering Socket Handler.");
+			_log.Debug("Entering Socket Handler.");
 
 			try
 			{
 				TcpListener listener = (TcpListener)result.AsyncState;
 
-				_Log.Debug("Calling EndAcceptSocket.");
+				_log.Debug("Calling EndAcceptSocket.");
 				var socket = listener.EndAcceptSocket(result);
-				_Log.Debug("Socket accepted and ready to be processed.");
-				_Processor.ProcessConnection(socket);
+				_log.Debug("Socket accepted and ready to be processed.");
+				_processor.ProcessConnection(socket);
 
 				// If socket is closed by any reason we should start listening again recursively.
 				// This is a failsafe for smtp authentications tests.
-				_Listener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), _Listener);
+				_tcpListener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), _tcpListener);
 			}
 			catch (ObjectDisposedException ex)
 			{
-				_Log.Warn("Object Disposed Exception. THIS IS EXPECTED ONLY IF SERVER WAS STOPPED.", ex);
+				_log.Warn("Object Disposed Exception. THIS IS EXPECTED ONLY IF SERVER WAS STOPPED.", ex);
 			}
 			catch (SocketException ex)
 			{
-				_Log.Warn("Socket Exception", ex);
+				_log.Warn("Socket Exception", ex);
 			}
 		}
 
@@ -190,7 +190,7 @@ namespace netDumbster.smtp
 		{
 			var server = new SimpleSmtpServer(port);
 			new Thread(new ThreadStart(server._Start)).Start();
-			server._ServerReady.WaitOne();
+			server._serverReady.WaitOne();
 			return server;
 		}
 
@@ -200,31 +200,32 @@ namespace netDumbster.smtp
 		/// </summary>
 		public void Stop()
 		{
-			_Log.Debug("Trying to stop SmtpServer.");
+			_log.Debug("Trying to stop SmtpServer.");
 
 			try
 			{
 				lock(this)
 				{
 					// Kick the server accept loop
-					if (_Listener != null)
+					if (_tcpListener != null)
 					{
-						_Processor.Stop();
-						_Log.Debug("Stopping tcp listener.");
-						_Listener.Stop();
-						_Log.Debug("Tcp listener stopped.");
+						_processor.Stop();
+						_log.Debug("Stopping tcp listener.");
+						_tcpListener.Stop();
+						_log.Debug("Tcp listener stopped.");
 					}
-					_Listener = null;
+					_tcpListener = null;
 				}
 			}
 			catch (Exception ex)
 			{
-				_Log.Warn("Unexpected Exception stopping SmtpServer", ex);
+				_log.Warn("Unexpected Exception stopping SmtpServer", ex);
 			}
 			finally
 			{
-				_Log.Debug("SmtpServer Stopped.");
-				_ClientConnected.Set();
+				_log.Debug("SmtpServer Stopped.");
+				_clientConnected.Set();
+                _serverReady.Close();
 			}
 		}
 
