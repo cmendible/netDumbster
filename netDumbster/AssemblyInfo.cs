@@ -1,4 +1,4 @@
-[assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.3.0.1")]
 [assembly: System.Reflection.AssemblyTrademark("")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright © Hexasystems Inc. 2010")]
 [assembly: System.Reflection.AssemblyProduct("netDumbster")]

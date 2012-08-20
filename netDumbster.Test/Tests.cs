@@ -6,9 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Mail;
 
-using Gallio.Framework;
-using MbUnit.Framework;
-
+using NUnit.Framework;
 using netDumbster.smtp;
 
 namespace netDumbster.Test
