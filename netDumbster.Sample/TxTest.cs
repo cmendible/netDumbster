@@ -1,13 +1,10 @@
-//
 using System;
 using System.Net;
 using System.Net.Mail;
-//
 using NUnit.Framework;
-//
 using netDumbster.smtp;
 
-namespace Samples.netDumbster
+namespace netDumbster.Sample
 {
 
     [TestFixture]
@@ -16,10 +13,10 @@ namespace Samples.netDumbster
         private static SimpleSmtpServer _Server;
         private Random _Rnd = new Random();
 
-        public TxNetDumbsterSamplesTest()
-        {
-            log4net.Config.XmlConfigurator.Configure();
-        }
+//        public TxNetDumbsterSamplesTest()
+//        {
+//            log4net.Config.XmlConfigurator.Configure();
+//        }
 
         private void SendMail()
         {

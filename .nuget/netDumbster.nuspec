@@ -6,7 +6,9 @@
     <authors>HexaSystems Inc.</authors>
 	<owners>HexaSystems Inc.</owners>
 	<dependencies>
+      <!--
       <dependency id="log4net" version="2.0.0" />
+      -->
     </dependencies> 
 	<requireLicenseAcceptance>true</requireLicenseAcceptance>
 	<summary>netDumbster is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)</summary>
