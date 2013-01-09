@@ -5,6 +5,7 @@ using System.Net.Mail;
 
 using NUnit.Framework;
 using netDumbster.smtp;
+using netDumbster.smtp.Logging;
 
 namespace netDumbster.Test
 {
@@ -15,10 +16,10 @@ namespace netDumbster.Test
 		private SimpleSmtpServer _Server;
 		private Random _Rnd = new Random();
 
-//		public Tests()
-//        {
-//            log4net.Config.XmlConfigurator.Configure();
-//        }
+        public Tests()
+        {
+            LogManager.GetLogger = type => new ConsoleLogger(type);
+        }
 
 		private void SendMail()
 		{

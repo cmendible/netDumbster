@@ -5,7 +5,7 @@
 using System;
 using System.Text;
 using System.Net.Sockets;
-using netDumbster.smtp.Abstractions;
+using netDumbster.smtp.Logging;
 
 namespace netDumbster.smtp
 {

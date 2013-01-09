@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using netDumbster.smtp.Abstractions;
+using netDumbster.smtp.Logging;
 
 namespace netDumbster.smtp
 {
