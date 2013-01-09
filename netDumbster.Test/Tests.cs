@@ -1,8 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Mail;
 
@@ -18,10 +15,10 @@ namespace netDumbster.Test
 		private SimpleSmtpServer _Server;
 		private Random _Rnd = new Random();
 
-		public Tests()
-        {
-            log4net.Config.XmlConfigurator.Configure();
-        }
+//		public Tests()
+//        {
+//            log4net.Config.XmlConfigurator.Configure();
+//        }
 
 		private void SendMail()
 		{

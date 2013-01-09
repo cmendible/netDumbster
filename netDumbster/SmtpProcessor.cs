@@ -8,8 +8,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
-
-using log4net;
+using netDumbster.smtp.Abstractions;
 
 namespace netDumbster.smtp
 {
