@@ -1,235 +1,232 @@
+#region Header
+
 // Copyright (c) 2010, Hexasystems Corporation
 // All rights reserved.
 
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-using netDumbster.smtp.Logging;
+#endregion Header
 
 namespace netDumbster.smtp
 {
+    using System;
+    using System.Collections.Concurrent;
+    using System.Collections.Generic;
+    using System.Net;
+    using System.Net.Sockets;
+    using System.Threading;
+
+    using netDumbster.smtp.Logging;
+
     /// <summary>
     /// Simple Smtp Server
     /// </summary>
-	public class SimpleSmtpServer
-	{
-		#region Variables
+    public class SimpleSmtpServer
+    {
+        #region Fields
 
-		/// <summary>
-		/// Logger
-		/// </summary>
-		ILog _log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        /// <summary>
+        /// Logger
+        /// </summary>
+        ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		/// <summary>
-		/// TCP Listener
-		/// </summary>
-		private TcpListener _tcpListener;
+        /// <summary>
+        /// Stores all of the email received since this instance started up.
+        /// </summary>
+        private ConcurrentBag<SmtpMessage> smtpMessageStore = new ConcurrentBag<SmtpMessage>();
 
-		/// <summary>
-		/// Stores all of the email received since this instance started up.
-		/// </summary>
-		private List<SmtpMessage> _receivedMail = new List<SmtpMessage>();
+        /// <summary>
+        ///  Flag to stop server
+        /// </summary>
+        private volatile bool stop;
 
-		/// <summary>
-		/// Smtp Processor
-		/// </summary>
-		private SmtpProcessor _processor;
+        /// <summary>
+        /// TCP Listener
+        /// </summary>
+        private TcpListener tcpListener;
 
-		/// <summary>
-		/// Thread signal.
-		/// </summary>
-		internal AutoResetEvent _clientConnected = null;
-		/// <summary>
-		/// Thread signal.
-		/// </summary>
-		internal AutoResetEvent _serverReady = null;
+        #endregion Fields
 
-		#endregion
+        #region Constructors
 
-		#region Properties
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SimpleSmtpServer"/> class.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        private SimpleSmtpServer(int port)
+        {
+            this.stop = false;
+            Port = port;
+            ServerReady = new AutoResetEvent(false);
+        }
 
-		/// <summary>
-		/// Gets or sets the port.
-		/// </summary>
-		/// <value>The port.</value>
-		public int Port { get; private set; }
+        #endregion Constructors
 
-		/// <summary>
-		/// List of email received by this instance since start up.
-		/// </summary>
-		/// <value><see cref="T:System.Array">Array</see> holding received <see cref="T:netDumbster.smtp.SmtpMessage">SmtpMessage</see></value>
-		public virtual SmtpMessage[] ReceivedEmail
-		{
-			get
-			{
-				lock(this)
-					return this._receivedMail.ToArray();
-			}
-		}
+        #region Properties
 
-		/// <summary>
-		/// Number of messages received by this instance since start up.
-		/// </summary>
-		/// <value>Number of messages</value>
-		public virtual int ReceivedEmailCount
-		{
-			get
-			{
-				lock (this)
-					return this._receivedMail.Count;
-			}
-		}
+        /// <summary>
+        /// Gets or sets the port.
+        /// </summary>
+        /// <value>The port.</value>
+        public int Port
+        {
+            get; private set;
+        }
 
-		/// <summary>
-		/// Clears the received email.
-		/// </summary>
-		public void ClearReceivedEmail()
-		{
-			lock (this)
-				this._receivedMail.Clear();
-		}
+        /// <summary>
+        /// List of email received by this instance since start up.
+        /// </summary>
+        /// <value><see cref="T:System.Array">Array</see> holding received <see cref="T:netDumbster.smtp.SmtpMessage">SmtpMessage</see></value>
+        public virtual SmtpMessage[] ReceivedEmail
+        {
+            get
+            {
+                lock(this)
+                    return this.smtpMessageStore.ToArray();
+            }
+        }
 
-		#endregion
+        /// <summary>
+        /// Number of messages received by this instance since start up.
+        /// </summary>
+        /// <value>Number of messages</value>
+        public virtual int ReceivedEmailCount
+        {
+            get
+            {
+                lock (this)
+                    return this.smtpMessageStore.Count;
+            }
+        }
 
-		#region Constructor
+        internal AutoResetEvent ServerReady
+        {
+            get; set;
+        }
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SimpleSmtpServer"/> class.
-		/// </summary>
-		/// <param name="port">The port.</param>
-		private SimpleSmtpServer(int port)
-		{
-			Port = port;
-			_clientConnected = new AutoResetEvent(false);
-			_serverReady = new AutoResetEvent(false);
-			_processor = new SmtpProcessor(string.Empty, _receivedMail);
-		}
+        #endregion Properties
 
-		#endregion
+        #region Methods
 
-		#region Private and Internal Methods
+        /// <summary>
+        /// Starts server at the specified port.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer Start(int port)
+        {
+            var server = new SimpleSmtpServer(port);
+            new Thread(new ThreadStart(server.StartListening)).Start();
+            server.ServerReady.WaitOne();
+            return server;
+        }
 
-		/// <summary>
-		/// Starts the Server
-		/// </summary>
-		internal void _Start()
-		{
-			_log.Info("Starting Smtp server");
+        /// <summary>
+        /// Clears the received email.
+        /// </summary>
+        public void ClearReceivedEmail()
+        {
+            lock (this)
+                this.smtpMessageStore = new ConcurrentBag<SmtpMessage>();
+        }
 
-			IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, Port);
-			_tcpListener = new TcpListener(endPoint);
-			_tcpListener.Start();
+        /// <summary>
+        /// Stop the server.  This notifies the listener to stop accepting new connections
+        /// and that the loop should exit.
+        /// </summary>
+        public void Stop()
+        {
+            log.Debug("Trying to stop SmtpServer.");
 
-			_log.DebugFormat("Started Tcp Listener at port {0}", Port);
+            try
+            {
+                lock(this)
+                {
+                    this.stop = true;
 
-			_clientConnected.Set();
+                    // Kick the server accept loop
+                    if (tcpListener != null)
+                    {
+                        //_processor.Stop();
+                        log.Debug("Stopping tcp listener.");
+                        tcpListener.Stop();
+                        log.Debug("Tcp listener stopped.");
+                    }
+                    tcpListener = null;
+                }
+            }
+            catch (Exception ex)
+            {
+                log.Warn("Unexpected Exception stopping SmtpServer", ex);
+            }
+            finally
+            {
+                log.Debug("SmtpServer Stopped.");
+                ServerReady.Close();
+            }
+        }
 
-			try
-			{
-				_clientConnected.Reset();
-				_log.Debug("Calling BeginAcceptSocket.");
-				_tcpListener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), _tcpListener);
-				_log.Debug("BeginAcceptSocket called.");
-				_serverReady.Set();
-				_clientConnected.WaitOne();
-			}
-			catch (Exception ex)
-			{
-				_log.Warn("Unexpected Exception starting the SmtpServer.", ex);
-			}
-			finally
-			{
-				_clientConnected.Set();
-			}
-		}
+        /// <summary>
+        /// Starts the Server
+        /// </summary>
+        internal void StartListening()
+        {
+            log.Info("Starting Smtp server");
 
-		/// <summary>
-		/// Async Socket handler.
-		/// </summary>
-		/// <param name="result">The result.</param>
-		private void _SocketHandler(IAsyncResult result)
-		{
-			_log.Debug("Entering Socket Handler.");
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, Port);
+            tcpListener = new TcpListener(endPoint);
+            tcpListener.Start();
 
-			try
-			{
-				TcpListener listener = (TcpListener)result.AsyncState;
+            log.DebugFormat("Started Tcp Listener at port {0}", Port);
 
-				_log.Debug("Calling EndAcceptSocket.");
-				var socket = listener.EndAcceptSocket(result);
-				_log.Debug("Socket accepted and ready to be processed.");
-				_processor.ProcessConnection(socket);
+            try
+            {
+                log.Debug("Calling BeginAcceptSocket.");
+                tcpListener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), tcpListener);
+                log.Debug("BeginAcceptSocket called.");
+                ServerReady.Set();
+            }
+            catch (Exception ex)
+            {
+                log.Warn("Unexpected Exception starting the SmtpServer.", ex);
+            }
+        }
 
-				// If socket is closed by any reason we should start listening again recursively.
-				// This is a failsafe for smtp authentications tests.
-				_tcpListener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), _tcpListener);
-			}
-			catch (ObjectDisposedException ex)
-			{
-				_log.Warn("Object Disposed Exception. THIS IS EXPECTED ONLY IF SERVER WAS STOPPED.", ex);
-			}
-			catch (SocketException ex)
-			{
-				_log.Warn("Socket Exception", ex);
-			}
-		}
+        /// <summary>
+        /// Async Socket handler.
+        /// </summary>
+        /// <param name="result">The result.</param>
+        private void _SocketHandler(IAsyncResult result)
+        {
+            if (this.stop)
+            {
+                return;
+            }
 
-		#endregion
+            log.Debug("Entering Socket Handler.");
 
-		#region Public Methods
+            try
+            {
+                TcpListener listener = (TcpListener)result.AsyncState;
+                listener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), listener);
 
-		/// <summary>
-		/// Starts server at the specified port.
-		/// </summary>
-		/// <param name="port">The port.</param>
-		/// <returns></returns>
-		public static SimpleSmtpServer Start(int port)
-		{
-			var server = new SimpleSmtpServer(port);
-			new Thread(new ThreadStart(server._Start)).Start();
-			server._serverReady.WaitOne();
-			return server;
-		}
+                log.Debug("Calling EndAcceptSocket.");
 
-		/// <summary>
-		/// Stop the server.  This notifies the listener to stop accepting new connections
-		/// and that the loop should exit.
-		/// </summary>
-		public void Stop()
-		{
-			_log.Debug("Trying to stop SmtpServer.");
+                using (Socket socket = listener.EndAcceptSocket(result))
+                {
+                    log.Debug("Socket accepted and ready to be processed.");
+                    SmtpProcessor processor = new SmtpProcessor(string.Empty, smtpMessageStore);
+                    processor.ProcessConnection(socket);
+                }
+            }
+            catch (ObjectDisposedException ex)
+            {
+                log.Warn("Object Disposed Exception. THIS IS EXPECTED ONLY IF SERVER WAS STOPPED.", ex);
+            }
+            catch (SocketException ex)
+            {
+                log.Warn("Socket Exception", ex);
+            }
+        }
 
-			try
-			{
-				lock(this)
-				{
-					// Kick the server accept loop
-					if (_tcpListener != null)
-					{
-						_processor.Stop();
-						_log.Debug("Stopping tcp listener.");
-						_tcpListener.Stop();
-						_log.Debug("Tcp listener stopped.");
-					}
-					_tcpListener = null;
-				}
-			}
-			catch (Exception ex)
-			{
-				_log.Warn("Unexpected Exception stopping SmtpServer", ex);
-			}
-			finally
-			{
-				_log.Debug("SmtpServer Stopped.");
-				_clientConnected.Set();
-                _serverReady.Close();
-			}
-		}
-
-		#endregion
-	}
-
+        #endregion Methods
+    }
 }
-

@@ -1,26 +1,34 @@
-//
-using System;
-using System.Net;
-using System.Net.Mail;
-//
-using NUnit.Framework;
-//
-using netDumbster.smtp;
-using netDumbster.smtp.Logging;
-
 namespace $rootnamespace$.Samples.netDumbster
 {
+	using System;
+	using System.Net;
+	using System.Net.Mail;
+	using NUnit.Framework;
+	using netDumbster.smtp;
+	using netDumbster.smtp.Logging;
+
 
     [TestFixture]
     public class TxNetDumbsterSamplesTest
     {
+		#region Fields
+
         private static SimpleSmtpServer _Server;
         private Random _Rnd = new Random();
+
+		#endregion Fields
+
+
+		#region Constructors
 
         public TxNetDumbsterSamplesTest()
         {
             LogManager.GetLogger = type => new ConsoleLogger(type);
         }
+
+		#endregion Constructors
+
+		#region Methods
 
         private void SendMail()
         {
@@ -40,6 +48,8 @@ namespace $rootnamespace$.Samples.netDumbster
             }
 
             client.Send(mailMessage);
+
+			client.Dispose();
         }
 
         [TestFixtureSetUp]
@@ -95,5 +105,8 @@ namespace $rootnamespace$.Samples.netDumbster
             }
             Assert.AreEqual(100, _Server.ReceivedEmailCount);
         }
+
+		#endregion Methods
+
     }
 }

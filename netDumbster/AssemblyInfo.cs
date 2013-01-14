@@ -7,4 +7,3 @@
 [assembly: System.Reflection.AssemblyDescription("")]
 [assembly: System.Reflection.AssemblyTitle("netDumbster")]
 [assembly: System.Runtime.CompilerServices.CompilationRelaxations(8)]
-

@@ -4,12 +4,18 @@
 
     public class LogManager
     {
-        public static Func<Type,ILog> GetLogger = type => new EmptyLogger();
+        #region Fields
+
+        public static Func<Type, ILog> GetLogger = type => new EmptyLogger();
+
+        #endregion Fields
+
+        #region Constructors
 
         public LogManager()
         {
         }
+
+        #endregion Constructors
     }
-
 }
-

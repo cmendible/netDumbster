@@ -4,13 +4,22 @@
 
     public class ConsoleLogger : ILog
     {
-        private string type;
+        #region Fields
+
         private const string layout = "{0} - {1} - {2} - {3}";
+
+        private string type;
+
+        #endregion Fields
+
+        #region Constructors
 
         public ConsoleLogger(Type type)
         {
             this.type = type.FullName;
         }
+
+        #endregion Constructors
 
         #region Methods
 
@@ -114,6 +123,11 @@
             WriteToConsole("WARNING", provider, format, args);
         }
 
+        private static string CurrentDateTime()
+        {
+            return DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss.fff");
+        }
+
         private void WriteToConsole(string level, object message)
         {
             Console.WriteLine(string.Format(layout, CurrentDateTime(), level, this.type, message));
@@ -134,10 +148,6 @@
             Console.WriteLine(string.Format(layout, CurrentDateTime(), level, this.type, string.Format(provider, format, args)));
         }
 
-        private static string CurrentDateTime()
-        {
-            return DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss.fff");
-        }
         #endregion Methods
     }
 }

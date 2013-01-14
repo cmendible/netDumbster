@@ -1,87 +1,89 @@
+#region Header
+
 // Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
 // All rights reserved.
-// Modified by Carlos Mendible 
+// Modified by Carlos Mendible
 
-using System;
-using System.Collections;
-using System.Text;
-using System.Text.RegularExpressions;
+#endregion Header
 
 namespace netDumbster.smtp
 {
-	/// <summary>
-	/// Stores an incoming SMTP Message.
-	/// </summary>
-	public class SmtpMessage
-	{
-		#region Constants
+    using System;
+    using System.Collections;
+    using System.Text;
+    using System.Text.RegularExpressions;
 
-		private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
+    /// <summary>
+    /// Stores an incoming SMTP Message.
+    /// </summary>
+    public class SmtpMessage
+    {
+        #region Fields
 
-		#endregion
+        private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
 
-		#region Variables
-		
-		private EmailAddress senderAddress;
-		private ArrayList recipientAddresses;
-		private StringBuilder data;
-		
-		private Hashtable headerFields = null;
-		
-		#endregion
-		
-		#region Constructors
-		
-		/// <summary>
-		/// Creates a new message.
-		/// </summary>
-		public SmtpMessage()
-		{
-			recipientAddresses = new ArrayList();
-			data = new StringBuilder();
-		}
-		
-		#endregion
-		
-		#region Properies
-		
-		/// <summary>
-		/// A hash table of all the Headers in the email message.  They keys
-		/// are the header names, and the values are the assoicated values, including
-		/// any sub key/value pairs is the header.
-		/// </summary>
-		public Hashtable Headers
-		{
-		  get
-		  {
-		    if( headerFields == null )
-		    {
-		      headerFields = ParseHeaders( data.ToString() );
-		    }
-		    return headerFields;
-		  }
-		}
+        private StringBuilder data;
+        private Hashtable headerFields = null;
+        private ArrayList recipientAddresses;
+        private EmailAddress senderAddress;
 
-        public string XPriority
+        #endregion Fields
+
+        #region Constructors
+
+        /// <summary>
+        /// Creates a new message.
+        /// </summary>
+        public SmtpMessage()
+        {
+            recipientAddresses = new ArrayList();
+            data = new StringBuilder();
+        }
+
+        #endregion Constructors
+
+        #region Properties
+
+        /// <summary>Message data.</summary>
+        public string Data
         {
             get
             {
-                if (Headers.ContainsKey("X-Priority"))
-                    return Headers["X-Priority"].ToString();
-                else
-                    return string.Empty;
+                return data.ToString();
             }
         }
 
-        public string Priority
+        /// <summary>
+        /// The email address of the person
+        /// that sent this email.
+        /// </summary>
+        public EmailAddress FromAddress
         {
             get
             {
-                if (Headers.ContainsKey("Priority"))
-                    return Headers["Priority"].ToString();
-                else
-                    return string.Empty;
+                return senderAddress;
             }
+            set
+            {
+                senderAddress = value;
+            }
+        }
+
+        /// <summary>
+        /// A hash table of all the Headers in the email message.  They keys
+        /// are the header names, and the values are the assoicated values, including
+        /// any sub key/value pairs is the header.
+        /// </summary>
+        public Hashtable Headers
+        {
+            get
+              {
+            if( headerFields == null )
+            {
+              headerFields = ParseHeaders( data.ToString() );
+            }
+            return headerFields;
+              }
         }
 
         public string Importance
@@ -95,109 +97,106 @@ namespace netDumbster.smtp
             }
         }
 
-		/// <summary>
-		/// The email address of the person
-		/// that sent this email.
-		/// </summary>
-		public EmailAddress FromAddress
-		{
-			get
-			{
-				return senderAddress;
-			}
-			set
-			{
-				senderAddress = value;
-			}
-		}
-		
-		/// <summary>
-		/// The addresses that this message will be
-		/// delivered to.
-		/// </summary>
-		public EmailAddress[] ToAddresses
-		{
-			get
-			{
-				return (EmailAddress[]) recipientAddresses.ToArray( typeof( EmailAddress ) );
-			}
-		}
-		
-		/// <summary>Addes an address to the recipient list.</summary>
-		public void AddToAddress( EmailAddress address )
-		{
-			recipientAddresses.Add( address );			
-		}
-		
-		/// <summary>Message data.</summary>
-		public string Data
-		{
-			get
-			{
-				return data.ToString();
-			}
-		}
-		
-		/// <summary>Append data to message data.</summary>
-		public void AddData( String data )
-		{
-			this.data.Append( data );
-		}
-		
-		/// <summary>
-		/// Parses the message body and creates an Attachment object
-		/// for each attachment in the message.
-		/// </summary>
-		public SmtpMessagePart[] MessageParts
-		{
-		  get
-		  {
-		    return parseMessageParts();
-		  }
-		}
-		
-		#endregion
+        /// <summary>
+        /// Parses the message body and creates an Attachment object
+        /// for each attachment in the message.
+        /// </summary>
+        public SmtpMessagePart[] MessageParts
+        {
+            get
+              {
+            return parseMessageParts();
+              }
+        }
 
-		#region Private Methods
+        public string Priority
+        {
+            get
+            {
+                if (Headers.ContainsKey("Priority"))
+                    return Headers["Priority"].ToString();
+                else
+                    return string.Empty;
+            }
+        }
 
-		/// <summary>
-		/// Parses an entire message or message part and returns the header entries
-		/// as a hashtable.
-		/// </summary>
-		/// <param name="partData">The raw message or message part data.</param>
-		/// <returns>A hashtable of the header keys and values.</returns>
-		internal static Hashtable ParseHeaders( string partData )
-		{
-			Hashtable headerFields = new Hashtable();
-			
-			string[] parts = Regex.Split( partData, DOUBLE_NEWLINE );
-			string headerString = parts[0] + DOUBLE_NEWLINE;
+        /// <summary>
+        /// The addresses that this message will be
+        /// delivered to.
+        /// </summary>
+        public EmailAddress[] ToAddresses
+        {
+            get
+            {
+                return (EmailAddress[]) recipientAddresses.ToArray( typeof( EmailAddress ) );
+            }
+        }
 
-			MatchCollection headerKeyCollectionMatch = Regex.Matches( headerString, @"^(?<key>\S*):", RegexOptions.Multiline );
-			string headerKey = null;
-			foreach( Match headerKeyMatch in headerKeyCollectionMatch )
-			{
-			    headerKey = headerKeyMatch.Result( "${key}" );
+        public string XPriority
+        {
+            get
+            {
+                if (Headers.ContainsKey("X-Priority"))
+                    return Headers["X-Priority"].ToString();
+                else
+                    return string.Empty;
+            }
+        }
+
+        #endregion Properties
+
+        #region Methods
+
+        /// <summary>Append data to message data.</summary>
+        public void AddData( String data )
+        {
+            this.data.Append( data );
+        }
+
+        /// <summary>Addes an address to the recipient list.</summary>
+        public void AddToAddress( EmailAddress address )
+        {
+            recipientAddresses.Add( address );
+        }
+
+        /// <summary>
+        /// Parses an entire message or message part and returns the header entries
+        /// as a hashtable.
+        /// </summary>
+        /// <param name="partData">The raw message or message part data.</param>
+        /// <returns>A hashtable of the header keys and values.</returns>
+        internal static Hashtable ParseHeaders( string partData )
+        {
+            Hashtable headerFields = new Hashtable();
+
+            string[] parts = Regex.Split( partData, DOUBLE_NEWLINE );
+            string headerString = parts[0] + DOUBLE_NEWLINE;
+
+            MatchCollection headerKeyCollectionMatch = Regex.Matches( headerString, @"^(?<key>\S*):", RegexOptions.Multiline );
+            string headerKey = null;
+            foreach( Match headerKeyMatch in headerKeyCollectionMatch )
+            {
+                headerKey = headerKeyMatch.Result( "${key}" );
                 Match valueMatch = Regex.Match( headerString, headerKey + @":(?<value>.*?)\r\n[\S\r]", RegexOptions.Singleline );
-				if( valueMatch.Success )
-				{
-					string headerValue = valueMatch.Result( "${value}" ).Trim();
-					headerValue = Regex.Replace( headerValue, "\r\n", "" );
-					headerValue = Regex.Replace( headerValue, @"\s+", " " );
-				    // TODO: Duplicate headers (like Received) will be overwritten by the 'last' value.					
-					headerFields[ headerKey] = headerValue;
-				}
-			}
+                if( valueMatch.Success )
+                {
+                    string headerValue = valueMatch.Result( "${value}" ).Trim();
+                    headerValue = Regex.Replace( headerValue, "\r\n", "" );
+                    headerValue = Regex.Replace( headerValue, @"\s+", " " );
+                    // TODO: Duplicate headers (like Received) will be overwritten by the 'last' value.
+                    headerFields[ headerKey] = headerValue;
+                }
+            }
 
-			return headerFields;
-		}
+            return headerFields;
+        }
 
-	  private SmtpMessagePart[] parseMessageParts()
-	  {
-			string message = data.ToString();
-			string contentType = (string) Headers["Content-Type"];
+        private SmtpMessagePart[] parseMessageParts()
+        {
+            string message = data.ToString();
+            string contentType = (string) Headers["Content-Type"];
 
-			// Check to see if it is a Multipart Messages
+            // Check to see if it is a Multipart Messages
             if (contentType != null && Regex.Match(contentType, "multipart/mixed", RegexOptions.IgnoreCase).Success)
             {
                 // Message parts are seperated by boundries.  Parse out what the boundry is so we can easily
@@ -237,10 +236,9 @@ namespace netDumbster.smtp
             {
                 return new SmtpMessagePart[] { new SmtpMessagePart(data.ToString()) };
             }
-	        return new SmtpMessagePart[0];
-	  }
+            return new SmtpMessagePart[0];
+        }
 
-	  #endregion
-
-	}
+        #endregion Methods
+    }
 }
