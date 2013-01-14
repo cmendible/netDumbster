@@ -108,12 +108,14 @@
         [Test]
         public void Send_Email_With_Priority()
         {
-            SmtpClient client = new SmtpClient("localhost", server.Port);
-            var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
-            mailMessage.IsBodyHtml = false;
-            mailMessage.Priority = MailPriority.High;
+            using (SmtpClient client = new SmtpClient("localhost", server.Port))
+            {
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
+                mailMessage.IsBodyHtml = false;
+                mailMessage.Priority = MailPriority.High;
+                client.Send(mailMessage);
+            }
 
-            client.Send(mailMessage);
             Assert.AreEqual(1, server.ReceivedEmailCount);
             Assert.AreEqual("this is the body", server.ReceivedEmail[0].MessageParts[0].BodyData);
             Assert.AreEqual("1", server.ReceivedEmail[0].XPriority);
@@ -167,27 +169,27 @@
 
         private void SendMail(bool smtpAuth, bool isBodyHtml, byte[] attachment, int serverPort)
         {
-            SmtpClient client = new SmtpClient("localhost", serverPort);
-            var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
-            mailMessage.IsBodyHtml = isBodyHtml;
-
-            if (isBodyHtml)
-                mailMessage.Body = "this is the html body";
-
-            if (smtpAuth)
+            using (SmtpClient client = new SmtpClient("localhost", serverPort))
             {
-                NetworkCredential credentials = new NetworkCredential("user", "pwd");
-                client.Credentials = credentials;
-                client.EnableSsl = false;
-            }
-            if (attachment != null)
-            {
-                mailMessage.Attachments.Add(new Attachment(new MemoryStream(attachment), "image/jpeg"));
-            }
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
+                mailMessage.IsBodyHtml = isBodyHtml;
 
-            client.Send(mailMessage);
+                if (isBodyHtml)
+                    mailMessage.Body = "this is the html body";
 
-            client.Dispose(); // without this line the test: Send_Email_And_Restart_Server_Using_The_Same_Port() fails!
+                if (smtpAuth)
+                {
+                    NetworkCredential credentials = new NetworkCredential("user", "pwd");
+                    client.Credentials = credentials;
+                    client.EnableSsl = false;
+                }
+                if (attachment != null)
+                {
+                    mailMessage.Attachments.Add(new Attachment(new MemoryStream(attachment), "image/jpeg"));
+                }
+
+                client.Send(mailMessage);
+            }
         }
 
         #endregion Methods
