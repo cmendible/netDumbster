@@ -9,7 +9,6 @@ namespace netDumbster.smtp
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
     using System.Net;
     using System.Net.Sockets;
     using System.Threading;
@@ -173,6 +172,9 @@ namespace netDumbster.smtp
 
             IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, Port);
             tcpListener = new TcpListener(endPoint);
+            // Fix the problem with the scenario if the server is stopped, and then
+            // restarted with the same port, it will not throw an error.
+            tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             tcpListener.Start();
 
             log.DebugFormat("Started Tcp Listener at port {0}", Port);
