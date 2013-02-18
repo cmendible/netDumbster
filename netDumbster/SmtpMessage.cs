@@ -90,8 +90,8 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (Headers.ContainsKey("Importance"))
-                    return Headers["Importance"].ToString();
+                if (Headers.ContainsKey("importance"))
+                    return Headers["importance"].ToString();
                 else
                     return string.Empty;
             }
@@ -113,8 +113,8 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (Headers.ContainsKey("Priority"))
-                    return Headers["Priority"].ToString();
+                if (Headers.ContainsKey("priority"))
+                    return Headers["priority"].ToString();
                 else
                     return string.Empty;
             }
@@ -136,8 +136,8 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (Headers.ContainsKey("X-Priority"))
-                    return Headers["X-Priority"].ToString();
+                if (Headers.ContainsKey("x-priority"))
+                    return Headers["x-priority"].ToString();
                 else
                     return string.Empty;
             }
@@ -176,7 +176,7 @@ namespace netDumbster.smtp
             string headerKey = null;
             foreach( Match headerKeyMatch in headerKeyCollectionMatch )
             {
-                headerKey = headerKeyMatch.Result( "${key}" );
+                headerKey = headerKeyMatch.Result("${key}");
                 Match valueMatch = Regex.Match( headerString, headerKey + @":(?<value>.*?)\r\n[\S\r]", RegexOptions.Singleline );
                 if( valueMatch.Success )
                 {
@@ -184,7 +184,8 @@ namespace netDumbster.smtp
                     headerValue = Regex.Replace( headerValue, "\r\n", "" );
                     headerValue = Regex.Replace( headerValue, @"\s+", " " );
                     // TODO: Duplicate headers (like Received) will be overwritten by the 'last' value.
-                    headerFields[ headerKey] = headerValue;
+                    // Header key are lower cased to avoid case sensitive issues.
+                    headerFields[headerKey.ToLowerInvariant()] = headerValue;
                 }
             }
 
@@ -194,7 +195,7 @@ namespace netDumbster.smtp
         private SmtpMessagePart[] parseMessageParts()
         {
             string message = data.ToString();
-            string contentType = (string) Headers["Content-Type"];
+            string contentType = (string)Headers["content-type"];
 
             // Check to see if it is a Multipart Messages
             if (contentType != null && Regex.Match(contentType, "multipart/mixed", RegexOptions.IgnoreCase).Success)

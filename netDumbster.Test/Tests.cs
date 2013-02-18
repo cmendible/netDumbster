@@ -124,6 +124,30 @@
         }
 
         [Test]
+        public void Send_Email_With_RussianText()
+        {
+            string body = string.Empty;
+            using (SmtpClient client = new SmtpClient("localhost", server.Port))
+            {
+                body = "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                        "Съешь ещё этих мягких французских булок, да выпей чаю";
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", body);
+                mailMessage.IsBodyHtml = false;
+                client.Send(mailMessage);
+            }
+
+            Assert.AreEqual(1, server.ReceivedEmailCount);
+            Assert.AreEqual(body,
+                System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(server.ReceivedEmail[0].MessageParts[0].BodyData)));
+
+            server.Stop();
+        }
+
+        [Test]
         public void Send_Html_Email()
         {
             SendMail(false, true, null);
