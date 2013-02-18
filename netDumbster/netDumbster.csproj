@@ -107,6 +107,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\CommonAssemblyInfo.cs">
+      <Link>CommonAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Logging\ConsoleLogger.cs" />
     <Compile Include="Logging\EmptyLogger.cs" />
     <Compile Include="Logging\ILog.cs" />
