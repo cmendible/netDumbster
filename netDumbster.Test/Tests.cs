@@ -141,6 +141,7 @@
             }
 
             Assert.AreEqual(1, server.ReceivedEmailCount);
+            Assert.AreEqual("base64", server.ReceivedEmail[0].Headers["content-transfer-encoding"]);
             Assert.AreEqual(body,
                 System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(server.ReceivedEmail[0].MessageParts[0].BodyData)));
 
