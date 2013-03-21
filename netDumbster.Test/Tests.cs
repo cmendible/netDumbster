@@ -165,6 +165,17 @@
         }
 
         [Test]
+        public void Send_One_Mail_Clear_Send_Another_Mail()
+        {
+            SendMail();
+            Assert.AreEqual(1, server.ReceivedEmailCount);
+            Assert.AreEqual("this is the body", server.ReceivedEmail[0].MessageParts[0].BodyData);
+            server.ClearReceivedEmail();
+            SendMail();
+            Assert.AreEqual("this is the body", server.ReceivedEmail[0].MessageParts[0].BodyData);
+        }
+
+        [Test]
         public void Send_One_Mail_With_SmtpAuth()
         {
             SendMail(true);

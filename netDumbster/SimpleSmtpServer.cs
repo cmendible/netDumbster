@@ -124,7 +124,13 @@ namespace netDumbster.smtp
         public void ClearReceivedEmail()
         {
             lock (this)
-                this.smtpMessageStore = new ConcurrentBag<SmtpMessage>();
+            {
+                SmtpMessage itemToRemove;
+                while (!this.smtpMessageStore.IsEmpty)
+                {
+                    this.smtpMessageStore.TryTake(out itemToRemove);
+                }
+            }
         }
 
         /// <summary>
