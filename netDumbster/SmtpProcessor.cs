@@ -112,6 +112,12 @@ namespace netDumbster.smtp
 
         #endregion Constructors
 
+        #region Events
+
+        public event EventHandler<MessageReceivedArgs> MessageReceived;
+
+        #endregion
+
         #region Properties
 
         /// <summary>
@@ -212,7 +218,10 @@ namespace netDumbster.smtp
 
             // Spool the message
             lock (smtpMessageStore)
+            {
                 smtpMessageStore.Add(message);
+                if(MessageReceived != null) MessageReceived(this, new MessageReceivedArgs(message));
+            }
 
             context.WriteLine(MESSAGE_OK);
 

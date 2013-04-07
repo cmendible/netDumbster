@@ -59,6 +59,12 @@ namespace netDumbster.smtp
 
         #endregion Constructors
 
+        #region Events
+
+        public event EventHandler<MessageReceivedArgs> OnReceived;
+
+        #endregion
+
         #region Properties
 
         /// <summary>
@@ -222,6 +228,10 @@ namespace netDumbster.smtp
                 {
                     log.Debug("Socket accepted and ready to be processed.");
                     SmtpProcessor processor = new SmtpProcessor(string.Empty, smtpMessageStore);
+                    processor.MessageReceived += (sender, args) =>
+                        {
+                            if (OnReceived != null) OnReceived(this, args);
+                        };
                     processor.ProcessConnection(socket);
                 }
             }
