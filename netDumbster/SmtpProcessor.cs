@@ -346,7 +346,6 @@ namespace netDumbster.smtp
                         context.Close();
                         continue;
                     }
-
                     String[] inputs = inputLine.Split(" ".ToCharArray());
 
                     switch (inputs[0].ToLower())
