@@ -1,4 +1,11 @@
-﻿namespace netDumbster.Test
+﻿#region Header
+
+// Copyright (c) 2010, Hexasystems Corporation
+// All rights reserved.
+
+#endregion Header
+
+namespace netDumbster.Test
 {
     using System;
     using System.IO;
@@ -180,6 +187,23 @@
         {
             SendMail(true);
             Assert.AreEqual(1, server.ReceivedEmailCount);
+        }
+
+        [Test]
+        public void Send_Fires_Message_Received_Event()
+        {
+            int port = 50004;
+            SimpleSmtpServer fixedPortServer = SimpleSmtpServer.Start(port);
+            fixedPortServer.MessageReceived += (sender, args) =>
+            {
+                Assert.IsNotNull(args.Message);
+                Assert.AreEqual(1, fixedPortServer.ReceivedEmailCount);
+                Assert.AreEqual("this is the body", args.Message.MessageParts[0].BodyData);
+            };
+
+            SendMail(false, false, null, port);
+
+            fixedPortServer.Stop();
         }
 
         [SetUp]

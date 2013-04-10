@@ -220,7 +220,10 @@ namespace netDumbster.smtp
             lock (smtpMessageStore)
             {
                 smtpMessageStore.Add(message);
-                if(MessageReceived != null) MessageReceived(this, new MessageReceivedArgs(message));
+                if(MessageReceived != null) 
+                {
+                    MessageReceived(this, new MessageReceivedArgs(message));
+                }
             }
 
             context.WriteLine(MESSAGE_OK);

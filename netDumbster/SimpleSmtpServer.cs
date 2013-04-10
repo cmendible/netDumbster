@@ -61,7 +61,7 @@ namespace netDumbster.smtp
 
         #region Events
 
-        public event EventHandler<MessageReceivedArgs> OnReceived;
+        public event EventHandler<MessageReceivedArgs> MessageReceived;
 
         #endregion
 
@@ -230,7 +230,10 @@ namespace netDumbster.smtp
                     SmtpProcessor processor = new SmtpProcessor(string.Empty, smtpMessageStore);
                     processor.MessageReceived += (sender, args) =>
                         {
-                            if (OnReceived != null) OnReceived(this, args);
+                            if (MessageReceived != null)
+                            {
+                                MessageReceived(this, args);
+                            }
                         };
                     processor.ProcessConnection(socket);
                 }

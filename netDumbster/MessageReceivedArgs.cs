@@ -1,7 +1,7 @@
-﻿using System;
-
-namespace netDumbster.smtp
+﻿namespace netDumbster.smtp
 {
+    using System;
+
     public class MessageReceivedArgs : EventArgs
     {
         public SmtpMessage Message { get; set; }
