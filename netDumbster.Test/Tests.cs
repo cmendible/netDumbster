@@ -212,6 +212,14 @@ namespace netDumbster.Test
             server = SimpleSmtpServer.Start(_Rnd.Next(50000, 60000));
         }
 
+        [Test]
+        public void Start_Server_Random_Port()
+        {
+            SimpleSmtpServer randomPortServer = SimpleSmtpServer.Start();
+            Assert.Greater(randomPortServer.Port, 0);
+            randomPortServer.Stop();
+        }
+
         private void SendMail()
         {
             SendMail(false);

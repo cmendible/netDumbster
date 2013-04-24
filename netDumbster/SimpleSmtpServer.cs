@@ -112,7 +112,21 @@ namespace netDumbster.smtp
         #region Methods
 
         /// <summary>
-        /// Starts server at the specified port.
+        /// Starts server listening to a random port.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer Start()
+        {
+            int port = GetRandomUnusedPort();
+            var server = new SimpleSmtpServer(port);
+            new Thread(new ThreadStart(server.StartListening)).Start();
+            server.ServerReady.WaitOne();
+            return server;
+        }
+
+        /// <summary>
+        /// Starts server listening to the specified port.
         /// </summary>
         /// <param name="port">The port.</param>
         /// <returns></returns>
@@ -203,6 +217,26 @@ namespace netDumbster.smtp
                 log.Warn("Unexpected Exception starting the SmtpServer.", ex);
             }
         }
+
+        /// <summary>
+        /// Gets the random unused port.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetRandomUnusedPort()
+        {
+            try
+            {
+                var listener = new TcpListener(IPAddress.Any, 0);
+                listener.Start();
+                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+                listener.Stop();
+                return port;
+            }
+            catch          
+            {
+                throw;
+            }
+        } 
 
         /// <summary>
         /// Async Socket handler.
