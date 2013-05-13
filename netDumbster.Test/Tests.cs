@@ -16,6 +16,7 @@ namespace netDumbster.Test
     using netDumbster.smtp.Logging;
 
     using NUnit.Framework;
+    using System.Net.Mime;
 
     [TestFixture]
     public class Tests
@@ -39,7 +40,7 @@ namespace netDumbster.Test
         #region Methods
 
         [TearDown]
-        public void FixtureTearDown()
+        public void TearDown()
         {
             server.Stop();
         }
@@ -209,7 +210,7 @@ namespace netDumbster.Test
         [SetUp]
         public void SetUp()
         {
-            server = SimpleSmtpServer.Start(_Rnd.Next(50000, 60000));
+            server = SimpleSmtpServer.Start();
         }
 
         [Test]
@@ -218,6 +219,25 @@ namespace netDumbster.Test
             SimpleSmtpServer randomPortServer = SimpleSmtpServer.Start();
             Assert.Greater(randomPortServer.Port, 0);
             randomPortServer.Stop();
+        }
+
+        [Test]
+        public void Send_Email_With_AlternateViews()
+        {
+            using (var client = new SmtpClient("localhost", this.server.Port))
+            {
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
+                mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
+                client.Send(mailMessage);
+            }
+            Assert.AreEqual(1, server.ReceivedEmailCount);
+            var smtpMessage = server.ReceivedEmail[0];
+
+            Assert.AreEqual(2, smtpMessage.MessageParts.Length);
+            Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
+            Assert.AreEqual("this is the body\r\n", smtpMessage.MessageParts[0].BodyData);
+            Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
+            Assert.AreEqual("FooBar\r\n", smtpMessage.MessageParts[1].BodyData);
         }
 
         private void SendMail()

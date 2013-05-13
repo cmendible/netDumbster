@@ -198,7 +198,7 @@ namespace netDumbster.smtp
             string contentType = (string)Headers["content-type"];
 
             // Check to see if it is a Multipart Messages
-            if (contentType != null && Regex.Match(contentType, "multipart/mixed", RegexOptions.IgnoreCase).Success)
+            if (contentType != null && Regex.Match(contentType, "multipart/(mixed|alternative)", RegexOptions.IgnoreCase).Success)
             {
                 // Message parts are seperated by boundries.  Parse out what the boundry is so we can easily
                 // parse the parts out of the message.
