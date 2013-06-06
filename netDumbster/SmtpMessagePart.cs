@@ -39,7 +39,7 @@ namespace netDumbster.smtp
             string[] parts = Regex.Split( data, DOUBLE_NEWLINE );
 
             headerData = parts[0];
-            bodyData = parts[1];
+            bodyData = parts.Length > 1 ? parts[1] : parts[0]; //If message part conatins no header or body copy the only value
         }
 
         #endregion Constructors
