@@ -9,6 +9,7 @@ namespace netDumbster.Test
 {
     using System;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Net.Mail;
 
@@ -17,6 +18,7 @@ namespace netDumbster.Test
 
     using NUnit.Framework;
     using System.Net.Mime;
+    using System.Collections.Generic;
 
     [TestFixture]
     public class Tests
@@ -240,6 +242,35 @@ namespace netDumbster.Test
             Assert.AreEqual("FooBar\r\n", smtpMessage.MessageParts[1].BodyData);
         }
 
+        [Test]
+        public void Send_Email_With_AlternateViews_And_Attachments()
+        {
+            using (var client = new SmtpClient("localhost", this.server.Port)) 
+            {
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
+                mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
+                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment1", new ContentType("application/octet-stream")));
+                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment2", new ContentType("application/octet-stream")));
+                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment3", new ContentType("application/octet-stream")));
+                client.Send(mailMessage);
+            }
+            Assert.AreEqual(1, server.ReceivedEmailCount);
+            var smtpMessage = server.ReceivedEmail[0];
+
+            var xxx = smtpMessage.AsMailMessage();
+            var att = xxx.Attachments[0];
+            var reader = new StreamReader(att.ContentStream);
+            var yyyy = reader.ReadToEnd();
+
+            yyyy = null;
+
+            Assert.AreEqual(5, smtpMessage.AsMailMessage().Parts().Length);
+            Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
+            Assert.AreEqual("this is the body\r\n", smtpMessage.MessageParts[0].BodyData);
+            Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
+            Assert.AreEqual("FooBar\r\n", smtpMessage.MessageParts[1].BodyData);
+        }
+
         private void SendMail()
         {
             SendMail(false);
@@ -281,5 +312,71 @@ namespace netDumbster.Test
         }
 
         #endregion Methods
+
     }
+
+    public static class MailMessageExtesions
+    { 
+        public static SmtpMessagePart[] Parts(this MailMessage mailMessage)
+        {
+            List<SmtpMessagePart> parts = new List<SmtpMessagePart>();
+
+            if (mailMessage.BodyEncoding != null)
+            {
+                SmtpMessagePart part = new SmtpMessagePart(mailMessage.BodyEncoding.ToString(), mailMessage.Body);
+                parts.Add(part);
+            }
+            
+            foreach (AlternateView alternateView in mailMessage.AlternateViews)
+            {
+                SmtpMessagePart part = new SmtpMessagePart(alternateView.ContentType.ToString(), StreamToString(alternateView.ContentStream));
+                parts.Add(part);
+            }
+
+            foreach (Attachment attachment in mailMessage.Attachments)
+            {
+                SmtpMessagePart part = new SmtpMessagePart(attachment.ContentType.ToString(), StreamToString(attachment.ContentStream));
+                parts.Add(part);
+            }
+
+            return parts.ToArray();
+        }
+
+        public static SmtpMessage AsSmtpMessage(this MailMessage mailMessage)
+        {
+            SmtpMessage message = new SmtpMessage();
+            message.FromAddress = new EmailAddress(mailMessage.From.Address);
+            mailMessage.To.ToList().ForEach(t => message.AddToAddress(new EmailAddress(t.Address)));
+            mailMessage.Headers.().ForEach(t => message.);
+
+            List<SmtpMessagePart> parts = new List<SmtpMessagePart>();
+
+            if (mailMessage.BodyEncoding != null)
+            {
+                SmtpMessagePart part = new SmtpMessagePart(mailMessage.BodyEncoding.ToString(), mailMessage.Body);
+                parts.Add(part);
+            }
+
+            foreach (AlternateView alternateView in mailMessage.AlternateViews)
+            {
+                SmtpMessagePart part = new SmtpMessagePart(alternateView.ContentType.ToString(), StreamToString(alternateView.ContentStream));
+                parts.Add(part);
+            }
+
+            foreach (Attachment attachment in mailMessage.Attachments)
+            {
+                SmtpMessagePart part = new SmtpMessagePart(attachment.ContentType.ToString(), StreamToString(attachment.ContentStream));
+                parts.Add(part);
+            }
+
+            return parts.ToArray();
+        }
+
+        private static string StreamToString(Stream stream)
+        {
+            var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+    }
+
 }

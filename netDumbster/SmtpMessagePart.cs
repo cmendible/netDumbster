@@ -34,12 +34,18 @@ namespace netDumbster.smtp
         /// the attachment, without the "------=_NextPart" separator strings.
         /// The last 4 characters of the data will be "\r\n\r\n".
         /// </summary>
-        public SmtpMessagePart( string data )
+        public SmtpMessagePart(string data)
         {
             string[] parts = Regex.Split( data, DOUBLE_NEWLINE );
 
             headerData = parts[0];
             bodyData = parts[1];
+        }
+
+        public SmtpMessagePart(string header, string body)
+        {
+            headerData = header;
+            bodyData = body;
         }
 
         #endregion Constructors

@@ -10,6 +10,7 @@ namespace netDumbster.smtp
 {
     using System;
     using System.Collections;
+    using System.Net.Mail;
     using System.Text;
     using System.Text.RegularExpressions;
 
@@ -77,13 +78,13 @@ namespace netDumbster.smtp
         public Hashtable Headers
         {
             get
-              {
-            if( headerFields == null )
             {
-              headerFields = ParseHeaders( data.ToString() );
+                if(headerFields == null)
+                {
+                    headerFields = ParseHeaders( data.ToString() );
+                }
+                return headerFields;
             }
-            return headerFields;
-              }
         }
 
         public string Importance
@@ -104,9 +105,9 @@ namespace netDumbster.smtp
         public SmtpMessagePart[] MessageParts
         {
             get
-              {
-            return parseMessageParts();
-              }
+            {
+                return parseMessageParts();
+            }
         }
 
         public string Priority
@@ -147,14 +148,19 @@ namespace netDumbster.smtp
 
         #region Methods
 
+        public MailMessage AsMailMessage()
+        {
+            return Amende.Snorre.MailMessageMimeParser.ParseMessage(new System.IO.StringReader(this.Data));
+        }
+
         /// <summary>Append data to message data.</summary>
-        public void AddData( String data )
+        public void AddData(string data)
         {
             this.data.Append( data );
         }
 
         /// <summary>Addes an address to the recipient list.</summary>
-        public void AddToAddress( EmailAddress address )
+        public void AddToAddress(EmailAddress address)
         {
             recipientAddresses.Add( address );
         }
@@ -165,7 +171,7 @@ namespace netDumbster.smtp
         /// </summary>
         /// <param name="partData">The raw message or message part data.</param>
         /// <returns>A hashtable of the header keys and values.</returns>
-        internal static Hashtable ParseHeaders( string partData )
+        internal static Hashtable ParseHeaders(string partData)
         {
             Hashtable headerFields = new Hashtable();
 
