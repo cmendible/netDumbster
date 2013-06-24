@@ -119,6 +119,7 @@
     </Compile>
     <Compile Include="EmailAddress.cs" />
     <Compile Include="InvalidEmailAddressException.cs" />
+    <Compile Include="MailMessageExtensions.cs" />
     <Compile Include="MailMessageMimeParser.cs" />
     <Compile Include="MessageReceivedArgs.cs" />
     <Compile Include="SmtpContext.cs" />

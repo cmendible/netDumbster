@@ -10,9 +10,11 @@ namespace netDumbster.smtp
 {
     using System;
     using System.Collections;
+    using System.Linq;
     using System.Net.Mail;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Collections.Specialized;
 
     /// <summary>
     /// Stores an incoming SMTP Message.
@@ -22,11 +24,7 @@ namespace netDumbster.smtp
         #region Fields
 
         private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
-
-        private StringBuilder data;
-        private Hashtable headerFields = null;
-        private ArrayList recipientAddresses;
-        private EmailAddress senderAddress;
+        private string data;
 
         #endregion Fields
 
@@ -35,10 +33,16 @@ namespace netDumbster.smtp
         /// <summary>
         /// Creates a new message.
         /// </summary>
-        public SmtpMessage()
+        public SmtpMessage(string data)
         {
-            recipientAddresses = new ArrayList();
-            data = new StringBuilder();
+            this.data = data;
+            using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(new System.IO.StringReader(this.data)))
+            {
+                this.Headers = mailMessage.Headers;
+                this.FromAddress = new EmailAddress(mailMessage.From.Address);
+                this.ToAddresses = mailMessage.To.ToList().Select(t => new EmailAddress(t.Address)).ToArray();
+                this.MessageParts = mailMessage.Parts();
+            }
         }
 
         #endregion Constructors
@@ -50,7 +54,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                return data.ToString();
+                return data;
             }
         }
 
@@ -60,14 +64,8 @@ namespace netDumbster.smtp
         /// </summary>
         public EmailAddress FromAddress
         {
-            get
-            {
-                return senderAddress;
-            }
-            set
-            {
-                senderAddress = value;
-            }
+            get;
+            private set;
         }
 
         /// <summary>
@@ -75,23 +73,17 @@ namespace netDumbster.smtp
         /// are the header names, and the values are the assoicated values, including
         /// any sub key/value pairs is the header.
         /// </summary>
-        public Hashtable Headers
+        public NameValueCollection Headers
         {
-            get
-            {
-                if(headerFields == null)
-                {
-                    headerFields = ParseHeaders( data.ToString() );
-                }
-                return headerFields;
-            }
+            get;
+            private set;
         }
 
         public string Importance
         {
             get
             {
-                if (Headers.ContainsKey("importance"))
+                if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("importance"))
                     return Headers["importance"].ToString();
                 else
                     return string.Empty;
@@ -104,17 +96,15 @@ namespace netDumbster.smtp
         /// </summary>
         public SmtpMessagePart[] MessageParts
         {
-            get
-            {
-                return parseMessageParts();
-            }
+            get;
+            private set;
         }
 
         public string Priority
         {
             get
             {
-                if (Headers.ContainsKey("priority"))
+                if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("priority"))
                     return Headers["priority"].ToString();
                 else
                     return string.Empty;
@@ -127,17 +117,15 @@ namespace netDumbster.smtp
         /// </summary>
         public EmailAddress[] ToAddresses
         {
-            get
-            {
-                return (EmailAddress[]) recipientAddresses.ToArray( typeof( EmailAddress ) );
-            }
+            get;
+            private set;
         }
 
         public string XPriority
         {
             get
             {
-                if (Headers.ContainsKey("x-priority"))
+                if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("x-priority"))
                     return Headers["x-priority"].ToString();
                 else
                     return string.Empty;
@@ -145,107 +133,5 @@ namespace netDumbster.smtp
         }
 
         #endregion Properties
-
-        #region Methods
-
-        public MailMessage AsMailMessage()
-        {
-            return Amende.Snorre.MailMessageMimeParser.ParseMessage(new System.IO.StringReader(this.Data));
-        }
-
-        /// <summary>Append data to message data.</summary>
-        public void AddData(string data)
-        {
-            this.data.Append( data );
-        }
-
-        /// <summary>Addes an address to the recipient list.</summary>
-        public void AddToAddress(EmailAddress address)
-        {
-            recipientAddresses.Add( address );
-        }
-
-        /// <summary>
-        /// Parses an entire message or message part and returns the header entries
-        /// as a hashtable.
-        /// </summary>
-        /// <param name="partData">The raw message or message part data.</param>
-        /// <returns>A hashtable of the header keys and values.</returns>
-        internal static Hashtable ParseHeaders(string partData)
-        {
-            Hashtable headerFields = new Hashtable();
-
-            string[] parts = Regex.Split( partData, DOUBLE_NEWLINE );
-            string headerString = parts[0] + DOUBLE_NEWLINE;
-
-            MatchCollection headerKeyCollectionMatch = Regex.Matches( headerString, @"^(?<key>\S*):", RegexOptions.Multiline );
-            string headerKey = null;
-            foreach( Match headerKeyMatch in headerKeyCollectionMatch )
-            {
-                headerKey = headerKeyMatch.Result("${key}");
-                Match valueMatch = Regex.Match( headerString, headerKey + @":(?<value>.*?)\r\n[\S\r]", RegexOptions.Singleline );
-                if( valueMatch.Success )
-                {
-                    string headerValue = valueMatch.Result( "${value}" ).Trim();
-                    headerValue = Regex.Replace( headerValue, "\r\n", "" );
-                    headerValue = Regex.Replace( headerValue, @"\s+", " " );
-                    // TODO: Duplicate headers (like Received) will be overwritten by the 'last' value.
-                    // Header key are lower cased to avoid case sensitive issues.
-                    headerFields[headerKey.ToLowerInvariant()] = headerValue;
-                }
-            }
-
-            return headerFields;
-        }
-
-        private SmtpMessagePart[] parseMessageParts()
-        {
-            string message = data.ToString();
-            string contentType = (string)Headers["content-type"];
-
-            // Check to see if it is a Multipart Messages
-            if (contentType != null && Regex.Match(contentType, "multipart/(mixed|alternative)", RegexOptions.IgnoreCase).Success)
-            {
-                // Message parts are seperated by boundries.  Parse out what the boundry is so we can easily
-                // parse the parts out of the message.
-                Match boundryMatch = Regex.Match(contentType, "boundary=(?<boundry>\\S+)", RegexOptions.IgnoreCase);
-                if (boundryMatch.Success)
-                {
-                    string boundry = boundryMatch.Result("${boundry}");
-
-                    ArrayList messageParts = new ArrayList();
-
-                    //TODO Improve this Regex.
-                    MatchCollection matches = Regex.Matches(message, "--" + boundry + ".*\r\n");
-
-                    int lastIndex = -1;
-                    int currentIndex = -1;
-                    int matchLength = -1;
-                    string messagePartText = null;
-                    foreach (Match match in matches)
-                    {
-                        currentIndex = match.Index;
-                        matchLength = match.Length;
-
-                        if (lastIndex != -1)
-                        {
-                            messagePartText = message.Substring(lastIndex, currentIndex - lastIndex);
-                            messageParts.Add(new SmtpMessagePart(messagePartText));
-                        }
-
-                        lastIndex = currentIndex + matchLength;
-                    }
-
-                    return (SmtpMessagePart[])messageParts.ToArray(typeof(SmtpMessagePart));
-                }
-            }
-            else
-            {
-                return new SmtpMessagePart[] { new SmtpMessagePart(data.ToString()) };
-            }
-            return new SmtpMessagePart[0];
-        }
-
-        #endregion Methods
     }
 }

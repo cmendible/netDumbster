@@ -11,6 +11,7 @@ namespace netDumbster.smtp
     using System;
     using System.Collections;
     using System.Text.RegularExpressions;
+    using System.Collections.Specialized;
 
     /// <summary>
     /// Stores a single part of a multipart message.
@@ -23,7 +24,7 @@ namespace netDumbster.smtp
 
         private string bodyData = String.Empty;
         private string headerData = String.Empty;
-        private Hashtable headerFields = null;
+        private NameValueCollection headerFields = null;
 
         #endregion Fields
 
@@ -73,13 +74,13 @@ namespace netDumbster.smtp
         /// are the header names, and the values are the assoicated values, including
         /// any sub key/value pairs is the header.
         /// </summary>
-        public Hashtable Headers
+        public NameValueCollection Headers
         {
             get
             {
                 if( headerFields == null )
                 {
-                    headerFields = SmtpMessage.ParseHeaders( headerData );
+                    //headerFields = SmtpMessage.ParseHeaders( headerData );
                 }
                 return headerFields;
             }

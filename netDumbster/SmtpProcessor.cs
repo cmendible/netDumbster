@@ -17,6 +17,7 @@ namespace netDumbster.smtp
     using System.Text.RegularExpressions;
 
     using netDumbster.smtp.Logging;
+    using System.Net.Mail;
 
     /// <summary>
     /// SMTPProcessor handles a single SMTP client connection.  This
@@ -196,7 +197,8 @@ namespace netDumbster.smtp
         {
             context.WriteLine(MESSAGE_START_DATA);
 
-            SmtpMessage message = context.Message;
+            StringBuilder message = context.Message;
+
             IPEndPoint clientEndPoint = (IPEndPoint)context.Socket.RemoteEndPoint;
             StringBuilder header = new StringBuilder();
             header.Append(String.Format("Received: from ({0} [{1}])", context.ClientDomain, clientEndPoint.Address));
@@ -204,25 +206,26 @@ namespace netDumbster.smtp
             header.Append("     " + System.DateTime.Now);
             header.Append("\r\n");
 
-            message.AddData(header.ToString());
+            message.Append(header.ToString());
 
             header.Length = 0;
 
             String line = context.ReadLine();
             while (!line.Equals("."))
             {
-                message.AddData(line);
-                message.AddData("\r\n");
+                message.Append(line);
+                message.Append("\r\n");
                 line = context.ReadLine();
             }
 
             // Spool the message
             lock (smtpMessageStore)
             {
-                smtpMessageStore.Add(message);
+                SmtpMessage smtpMessage = new SmtpMessage(message.ToString());
+                smtpMessageStore.Add(smtpMessage);
                 if(MessageReceived != null) 
                 {
-                    MessageReceived(this, new MessageReceivedArgs(message));
+                    MessageReceived(this, new MessageReceivedArgs(smtpMessage));
                 }
             }
 
@@ -281,8 +284,8 @@ namespace netDumbster.smtp
                 {
                     try
                     {
-                        EmailAddress emailAddress = new EmailAddress(address);
-                        context.Message.FromAddress = emailAddress;
+                        //EmailAddress emailAddress = new EmailAddress(address);
+                        //context.Message.FromAddress = emailAddress;
                         context.LastCommand = COMMAND_MAIL;
                         addressValid = true;
                         context.WriteLine(MESSAGE_OK);
@@ -424,8 +427,8 @@ namespace netDumbster.smtp
                         // Check to make sure we want to accept this message.
                         //if (recipientFilter.AcceptRecipient(context, emailAddress))
                         //{
-                        EmailAddress emailAddress = new EmailAddress(address);
-                        context.Message.AddToAddress(emailAddress);
+                        //EmailAddress emailAddress = new EmailAddress(address);
+                        //context.Message.AddToAddress(emailAddress);
                         context.LastCommand = COMMAND_RCPT;
                         context.WriteLine(MESSAGE_OK);
                         //}

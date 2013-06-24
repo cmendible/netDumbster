@@ -108,7 +108,7 @@ namespace netDumbster.Test
 
             SendMail(false, true, data);
             Assert.AreEqual(1, server.ReceivedEmailCount);
-            Assert.AreEqual("this is the html body\r\n", server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.AreEqual("this is the html body", server.ReceivedEmail[0].MessageParts[0].BodyData);
             Assert.IsNotNull(server.ReceivedEmail[0].MessageParts[1]);
             Assert.IsNotNull(server.ReceivedEmail[0].MessageParts[1].BodyData);
             Assert.IsNotEmpty(server.ReceivedEmail[0].MessageParts[1].BodyData);
@@ -129,8 +129,22 @@ namespace netDumbster.Test
             Assert.AreEqual(1, server.ReceivedEmailCount);
             Assert.AreEqual("this is the body", server.ReceivedEmail[0].MessageParts[0].BodyData);
             Assert.AreEqual("1", server.ReceivedEmail[0].XPriority);
-            Assert.AreEqual("1", server.ReceivedEmail[0].Priority);
+            Assert.AreEqual("urgent", server.ReceivedEmail[0].Priority);
             Assert.AreEqual("high", server.ReceivedEmail[0].Importance);
+        }
+
+        [Test]
+        public void Send_Email_With_Many_Lines()
+        {
+            using (SmtpClient client = new SmtpClient("localhost", server.Port))
+            {
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body\r\nline2\r\nline3");
+                mailMessage.IsBodyHtml = false;
+                client.Send(mailMessage);
+            }
+
+            Assert.AreEqual(1, server.ReceivedEmailCount);
+            Assert.AreEqual("this is the body\r\nline2\r\nline3", server.ReceivedEmail[0].MessageParts[0].BodyData);
         }
 
         [Test]
@@ -237,9 +251,9 @@ namespace netDumbster.Test
 
             Assert.AreEqual(2, smtpMessage.MessageParts.Length);
             Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
-            Assert.AreEqual("this is the body\r\n", smtpMessage.MessageParts[0].BodyData);
+            Assert.AreEqual("this is the body", smtpMessage.MessageParts[0].BodyData);
             Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
-            Assert.AreEqual("FooBar\r\n", smtpMessage.MessageParts[1].BodyData);
+            Assert.AreEqual("FooBar", smtpMessage.MessageParts[1].BodyData);
         }
 
         [Test]
@@ -256,19 +270,11 @@ namespace netDumbster.Test
             }
             Assert.AreEqual(1, server.ReceivedEmailCount);
             var smtpMessage = server.ReceivedEmail[0];
-
-            var xxx = smtpMessage.AsMailMessage();
-            var att = xxx.Attachments[0];
-            var reader = new StreamReader(att.ContentStream);
-            var yyyy = reader.ReadToEnd();
-
-            yyyy = null;
-
-            Assert.AreEqual(5, smtpMessage.AsMailMessage().Parts().Length);
+            Assert.AreEqual(5, smtpMessage.MessageParts.Length);
             Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
-            Assert.AreEqual("this is the body\r\n", smtpMessage.MessageParts[0].BodyData);
+            Assert.AreEqual("this is the body", smtpMessage.MessageParts[0].BodyData);
             Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
-            Assert.AreEqual("FooBar\r\n", smtpMessage.MessageParts[1].BodyData);
+            Assert.AreEqual("FooBar", smtpMessage.MessageParts[1].BodyData);
         }
 
         private void SendMail()
@@ -313,70 +319,6 @@ namespace netDumbster.Test
 
         #endregion Methods
 
-    }
-
-    public static class MailMessageExtesions
-    { 
-        public static SmtpMessagePart[] Parts(this MailMessage mailMessage)
-        {
-            List<SmtpMessagePart> parts = new List<SmtpMessagePart>();
-
-            if (mailMessage.BodyEncoding != null)
-            {
-                SmtpMessagePart part = new SmtpMessagePart(mailMessage.BodyEncoding.ToString(), mailMessage.Body);
-                parts.Add(part);
-            }
-            
-            foreach (AlternateView alternateView in mailMessage.AlternateViews)
-            {
-                SmtpMessagePart part = new SmtpMessagePart(alternateView.ContentType.ToString(), StreamToString(alternateView.ContentStream));
-                parts.Add(part);
-            }
-
-            foreach (Attachment attachment in mailMessage.Attachments)
-            {
-                SmtpMessagePart part = new SmtpMessagePart(attachment.ContentType.ToString(), StreamToString(attachment.ContentStream));
-                parts.Add(part);
-            }
-
-            return parts.ToArray();
-        }
-
-        public static SmtpMessage AsSmtpMessage(this MailMessage mailMessage)
-        {
-            SmtpMessage message = new SmtpMessage();
-            message.FromAddress = new EmailAddress(mailMessage.From.Address);
-            mailMessage.To.ToList().ForEach(t => message.AddToAddress(new EmailAddress(t.Address)));
-            mailMessage.Headers.().ForEach(t => message.);
-
-            List<SmtpMessagePart> parts = new List<SmtpMessagePart>();
-
-            if (mailMessage.BodyEncoding != null)
-            {
-                SmtpMessagePart part = new SmtpMessagePart(mailMessage.BodyEncoding.ToString(), mailMessage.Body);
-                parts.Add(part);
-            }
-
-            foreach (AlternateView alternateView in mailMessage.AlternateViews)
-            {
-                SmtpMessagePart part = new SmtpMessagePart(alternateView.ContentType.ToString(), StreamToString(alternateView.ContentStream));
-                parts.Add(part);
-            }
-
-            foreach (Attachment attachment in mailMessage.Attachments)
-            {
-                SmtpMessagePart part = new SmtpMessagePart(attachment.ContentType.ToString(), StreamToString(attachment.ContentStream));
-                parts.Add(part);
-            }
-
-            return parts.ToArray();
-        }
-
-        private static string StreamToString(Stream stream)
-        {
-            var reader = new StreamReader(stream);
-            return reader.ReadToEnd();
-        }
     }
 
 }

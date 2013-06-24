@@ -45,7 +45,7 @@ namespace netDumbster.smtp
         private int lastCommand;
 
         /// <summary>The incoming message.</summary>
-        private SmtpMessage message;
+        private StringBuilder message;
 
         /// <summary>The socket to the client.</summary>
         private Socket socket;
@@ -62,7 +62,7 @@ namespace netDumbster.smtp
         {
             this.lastCommand = -1;
             this.socket = socket;
-            message = new SmtpMessage();
+            message = new StringBuilder();
 
             // Set the encoding to ASCII.
             encoding = Encoding.ASCII;
@@ -108,7 +108,7 @@ namespace netDumbster.smtp
         /// <summary>
         /// The SMTPMessage that is currently being received.
         /// </summary>
-        public SmtpMessage Message
+        public StringBuilder Message
         {
             get
             {
@@ -191,7 +191,7 @@ namespace netDumbster.smtp
         {
             _Log.Debug("Resetting SmtpContext.");
             inputBuffer.Length = 0;
-            message = new SmtpMessage();
+            message = new StringBuilder();
             lastCommand = SmtpProcessor.COMMAND_HELO;
             _Log.Debug("Done resetting SmtpContext.");
         }

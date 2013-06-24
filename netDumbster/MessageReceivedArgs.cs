@@ -1,4 +1,11 @@
-﻿namespace netDumbster.smtp
+﻿#region Header
+
+// Copyright (c) 2010, Hexasystems Corporation
+// All rights reserved.
+
+#endregion Header
+
+namespace netDumbster.smtp
 {
     using System;
 

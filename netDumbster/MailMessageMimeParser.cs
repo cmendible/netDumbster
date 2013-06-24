@@ -1,4 +1,12 @@
-﻿using System;
+﻿#region Header
+
+// Copyright (c) 2009 snarum, (http://mimeparser.codeplex.com/)
+// All rights reserved.
+// Modified by Carlos Mendible
+
+#endregion Header
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -9,7 +17,7 @@ using System.Collections;
 using System.Collections.Specialized;
 using System.Net.Mime;
 
-namespace Amende.Snorre
+namespace netDumbster.smtp
 {
     public static class MailMessageMimeParser
     {
@@ -38,8 +46,10 @@ namespace Amende.Snorre
                 {
                     string headerkey = line.Substring(0, line.IndexOf(':')).ToLower();
                     string value = line.Substring(line.IndexOf(':') + 1).TrimStart(' ');
-                    if(value.Length>0)
+                    if (value.Length > 0)
+                    {
                         returnValue.Headers[headerkey] = line.Substring(line.IndexOf(':') + 1).TrimStart(' ');
+                    }
                     lastHeader = headerkey;
                 }
             }
@@ -47,12 +57,13 @@ namespace Amende.Snorre
                 return null;
             DecodeHeaders(returnValue.Headers);
             string contentTransferEncoding = string.Empty;
-            if (!string.IsNullOrEmpty(returnValue.Headers[ "content-transfer-encoding"]))
-                contentTransferEncoding = returnValue.Headers[ "content-transfer-encoding"];
+            if (!string.IsNullOrEmpty(returnValue.Headers["content-transfer-encoding"]))
+            {
+                contentTransferEncoding = returnValue.Headers["content-transfer-encoding"];
+            }
             System.Net.Mime.ContentType tmpContentType = FindContentType(returnValue.Headers);
             string contentId = string.Empty;
  
-
             switch (tmpContentType.MediaType)
             {
                 case "multipart/alternative":
@@ -239,10 +250,12 @@ namespace Amende.Snorre
                         if (line.EndsWith("="))
                             b.Append(DecodeQP(line.TrimEnd('=')));
                         else
-                            b.Append(DecodeQP(line) + "\n");
+                            // b.Append(DecodeQP(line) + "\n");
+                            b.Append(DecodeQP(line));
                         break;
                     case "base64":
-                        b.Append(DecodeBase64(line, contentType.CharSet));
+                        // b.Append(DecodeBase64(line, contentType.CharSet));
+                        b.Append(line);
                         break;
                     default:
                         b.Append(line);
@@ -340,6 +353,8 @@ namespace Amende.Snorre
                 returnValue.Boundary = Regex.Match(headers["content-type"], @"boundary=(.*?)(;|$)", RegexOptions.IgnoreCase).Groups[1].Value;
             if (Regex.IsMatch(headers["content-type"], @"charset=""(.*?)""", RegexOptions.IgnoreCase))
                 returnValue.CharSet = Regex.Match(headers["content-type"], @"charset=""(.*?)""", RegexOptions.IgnoreCase).Groups[1].Value;
+            if (Regex.IsMatch(headers["content-type"], @"charset=(.*?)(;|$)", RegexOptions.IgnoreCase))
+                returnValue.CharSet = Regex.Match(headers["content-type"], @"charset=(.*?)(;|$)", RegexOptions.IgnoreCase).Groups[1].Value;
 
             return returnValue;
         }
