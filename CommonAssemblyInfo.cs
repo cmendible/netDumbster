@@ -1,4 +1,4 @@
-﻿[assembly: System.Reflection.AssemblyVersion("1.3.0.6")]
+﻿[assembly: System.Reflection.AssemblyVersion("1.4.0.0")]
 [assembly: System.Reflection.AssemblyTrademark("")]
 [assembly: System.Reflection.AssemblyCopyright("Copyright © Hexasystems Inc. 2010")]
 [assembly: System.Reflection.AssemblyCompany("Hexasystems Inc.")]
