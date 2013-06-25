@@ -122,6 +122,7 @@
     <Compile Include="MailMessageExtensions.cs" />
     <Compile Include="MailMessageMimeParser.cs" />
     <Compile Include="MessageReceivedArgs.cs" />
+    <Compile Include="RawSmtpMessage.cs" />
     <Compile Include="SmtpContext.cs" />
     <Compile Include="SmtpMessage.cs" />
     <Compile Include="SmtpMessagePart.cs" />

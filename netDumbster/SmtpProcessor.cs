@@ -199,7 +199,7 @@ namespace netDumbster.smtp
         {
             context.WriteLine(MESSAGE_START_DATA);
 
-            StringBuilder message = context.Message;
+            RawSmtpMessage rawSmtpMessage = context.Message;
 
             IPEndPoint clientEndPoint = (IPEndPoint)context.Socket.RemoteEndPoint;
             StringBuilder header = new StringBuilder();
@@ -208,22 +208,22 @@ namespace netDumbster.smtp
             header.Append("     " + System.DateTime.Now);
             header.Append("\r\n");
 
-            message.Append(header.ToString());
+            rawSmtpMessage.Data.Append(header.ToString());
 
             header.Length = 0;
 
             String line = context.ReadLine();
             while (!line.Equals("."))
             {
-                message.Append(line);
-                message.Append("\r\n");
+                rawSmtpMessage.Data.Append(line);
+                rawSmtpMessage.Data.Append("\r\n");
                 line = context.ReadLine();
             }
 
             // Spool the message
             lock (smtpMessageStore)
             {
-                SmtpMessage smtpMessage = new SmtpMessage(message.ToString());
+                SmtpMessage smtpMessage = new SmtpMessage(rawSmtpMessage);
                 smtpMessageStore.Add(smtpMessage);
                 if(MessageReceived != null)
                 {
@@ -426,21 +426,10 @@ namespace netDumbster.smtp
                 {
                     try
                     {
-                        //EmailAddress emailAddress = new EmailAddress(address);
-
-                        // Check to make sure we want to accept this message.
-                        //if (recipientFilter.AcceptRecipient(context, emailAddress))
-                        //{
-                        //EmailAddress emailAddress = new EmailAddress(address);
-                        //context.Message.AddToAddress(emailAddress);
+                        EmailAddress emailAddress = new EmailAddress(address);
+                        context.Message.AddRecipient(emailAddress);
                         context.LastCommand = COMMAND_RCPT;
                         context.WriteLine(MESSAGE_OK);
-                        //}
-                        //else
-                        //{
-                        //    context.WriteLine(MESSAGE_UNKNOWN_USER);
-                        //    if (log.IsDebugEnabled) log.Debug(String.Format("Connection {0}: RcptTo address: {1} rejected.  Did not pass Address Filter.", context.ConnectionId, address));
-                        //}
                     }
                     catch
                     {

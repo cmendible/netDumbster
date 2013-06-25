@@ -25,7 +25,7 @@ namespace netDumbster.smtp
 
         private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
 
-        private string data;
+        private RawSmtpMessage rawSmtpMessage;
 
         #endregion Fields
 
@@ -34,14 +34,14 @@ namespace netDumbster.smtp
         /// <summary>
         /// Creates a new message.
         /// </summary>
-        public SmtpMessage(string data)
+        public SmtpMessage(RawSmtpMessage rawSmtpMessage)
         {
-            this.data = data;
-            using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(new System.IO.StringReader(this.data)))
+            this.rawSmtpMessage = rawSmtpMessage;
+            using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(new System.IO.StringReader(this.rawSmtpMessage.Data.ToString())))
             {
                 this.Headers = mailMessage.Headers;
                 this.FromAddress = new EmailAddress(mailMessage.From.Address);
-                this.ToAddresses = mailMessage.To.ToList().Select(t => new EmailAddress(t.Address)).ToArray();
+                this.ToAddresses = this.rawSmtpMessage.Recipients.ToArray();
                 this.MessageParts = mailMessage.Parts();
             }
         }
@@ -55,7 +55,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                return data;
+                return this.rawSmtpMessage.Data.ToString();
             }
         }
 

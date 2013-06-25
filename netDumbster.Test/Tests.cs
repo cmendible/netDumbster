@@ -295,6 +295,8 @@ namespace netDumbster.Test
             using (SmtpClient client = new SmtpClient("localhost", serverPort))
             {
                 var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
+                mailMessage.Bcc.Add(new MailAddress("bcc@mendible.com"));
+                mailMessage.CC.Add(new MailAddress("cc@mendible.com"));
                 mailMessage.IsBodyHtml = isBodyHtml;
 
                 if (isBodyHtml)
