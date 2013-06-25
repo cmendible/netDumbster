@@ -6,21 +6,22 @@
 
 #endregion Header
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net.Mail;
-using System.IO;
-using System.Text.RegularExpressions;
-using System.Collections;
-using System.Collections.Specialized;
-using System.Net.Mime;
-
 namespace netDumbster.smtp
 {
+    using System;
+    using System.Collections;
+    using System.Collections.Generic;
+    using System.Collections.Specialized;
+    using System.IO;
+    using System.Net.Mail;
+    using System.Net.Mime;
+    using System.Text;
+    using System.Text.RegularExpressions;
+
     public static class MailMessageMimeParser
     {
+        #region Methods
+
         public static MailMessage ParseMessage(StringReader mimeMail)
         {
             MailMessage returnValue = ParseMessageRec(mimeMail);
@@ -29,67 +30,134 @@ namespace netDumbster.smtp
             return returnValue;
         }
 
-        private static MailMessage ParseMessageRec(StringReader mimeMail)
+        private static string DecodeBase64(string line, string enc)
         {
-            MailMessage returnValue = new MailMessage();
-            string line = string.Empty;
-            string lastHeader = string.Empty;
-            while ((!string.IsNullOrEmpty(line = mimeMail.ReadLine()) && (line.Trim().Length != 0)))
+            string returnValue = string.Empty;
+            switch (enc.ToLower())
             {
+                case "utf-7":
+                    returnValue = System.Text.Encoding.UTF7.GetString(Convert.FromBase64String(line));
+                    break;
+                case "utf-8":
+                    returnValue = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(line));
+                    break;
+                default:
+                    break;
+            }
 
-                //If the line starts with a whitespace it is a continuation of the previous line
-                if (Regex.IsMatch(line, @"^\s"))
+            return returnValue;
+        }
+
+        private static byte[] DecodeBase64Binary(string line)
+        {
+            return Convert.FromBase64String(line);
+        }
+
+        private static void DecodeHeaders(NameValueCollection headers)
+        {
+            ArrayList tmpKeys = new ArrayList(headers.Keys);
+
+            foreach (string key in headers.AllKeys)
+            {
+                //strip qp encoding information from the header if present
+                headers[key] = Regex.Replace(headers[key].ToString(), @"=\?.*?\?Q\?(.*?)\?=", new MatchEvaluator(MyMatchEvaluator), RegexOptions.IgnoreCase | RegexOptions.Multiline);
+                headers[key] = Regex.Replace(headers[key].ToString(), @"=\?.*?\?B\?(.*?)\?=", new MatchEvaluator(MyMatchEvaluatorBase64), RegexOptions.IgnoreCase | RegexOptions.Multiline);
+            }
+        }
+
+        private static string DecodeQP(string trall)
+        {
+            StringBuilder b = new StringBuilder();
+            for (int i = 0; i < trall.Length; i++)
+            {
+                if (trall[i] == '=')
                 {
-                    returnValue.Headers[lastHeader] = GetHeaderValue(returnValue.Headers,lastHeader) + " " + line.TrimStart('\t',' ');
+                    byte tmpbyte = Convert.ToByte(trall.Substring(i + 1, 2), 16);
+                    i += 2;
+                    b.Append((char)tmpbyte);
+                }
+                else if (trall[i] == '_')
+                {
+                    b.Append(' ');
                 }
                 else
                 {
-                    string headerkey = line.Substring(0, line.IndexOf(':')).ToLower();
-                    string value = line.Substring(line.IndexOf(':') + 1).TrimStart(' ');
-                    if (value.Length > 0)
-                    {
-                        returnValue.Headers[headerkey] = line.Substring(line.IndexOf(':') + 1).TrimStart(' ');
-                    }
-                    lastHeader = headerkey;
+                    b.Append(trall[i]);
                 }
             }
-            if (returnValue.Headers.Count == 0)
-                return null;
-            DecodeHeaders(returnValue.Headers);
-            string contentTransferEncoding = string.Empty;
-            if (!string.IsNullOrEmpty(returnValue.Headers["content-transfer-encoding"]))
-            {
-                contentTransferEncoding = returnValue.Headers["content-transfer-encoding"];
-            }
-            System.Net.Mime.ContentType tmpContentType = FindContentType(returnValue.Headers);
-            string contentId = string.Empty;
- 
-            switch (tmpContentType.MediaType)
-            {
-                case "multipart/alternative":
-                case "multipart/related":
-                case "multipart/mixed":
-                    MailMessage tmpMessage = ImportMultiPartAlternative(tmpContentType.Boundary, mimeMail);
-                    foreach (AlternateView view in tmpMessage.AlternateViews)
-                        returnValue.AlternateViews.Add(view);
-                    foreach (Attachment att in tmpMessage.Attachments)
-                        returnValue.Attachments.Add(att);
-                    break;
-                case "text/html":
-                case "text/plain":
-                    returnValue.AlternateViews.Add(ImportText(mimeMail, contentTransferEncoding, tmpContentType));
-                    break;
-                default:
-                    returnValue.Attachments.Add(ImportAttachment(mimeMail, contentTransferEncoding, tmpContentType, returnValue.Headers));
-                    break;
+            return b.ToString();
+        }
 
+        private static void FillAddressesCollection(ICollection<MailAddress> addresses, string addressHeader)
+        {
+            if(string.IsNullOrEmpty(addressHeader))
+            {
+                return;
             }
+
+            string[] emails = addressHeader.Split(',');
+
+            for (int i = 0; i < emails.Length; i++)
+            {
+                MailAddress address;
+
+                try
+                {
+                    address = new MailAddress(emails[i]);
+                }
+                catch
+                {
+                    if (i < emails.Length - 1)
+                    {
+                        address = new MailAddress(emails[i] + "," + emails[i + 1]);
+                        i++;
+                    }
+                    else
+                    {
+                        address = new MailAddress("missing@missing.biz");
+                    }
+                }
+
+                addresses.Add(address);
+            }
+        }
+
+        private static System.Net.Mime.ContentType FindContentType(NameValueCollection headers)
+        {
+            System.Net.Mime.ContentType returnValue = new ContentType();
+            if (headers["content-type"] == null)
+            {
+                return returnValue;
+            }
+            returnValue = new System.Net.Mime.ContentType(Regex.Match(headers["content-type"], @"^([^;]*)", RegexOptions.IgnoreCase).Groups[1].Value);
+
+            if(Regex.IsMatch(headers["content-type"],  @"name=""?(.*?)""?($|;)", RegexOptions.IgnoreCase))
+            {
+                returnValue.Name = Regex.Match(headers["content-type"],  @"name=""?(.*?)""?($|;)", RegexOptions.IgnoreCase).Groups[1].Value;
+            }
+            if (Regex.IsMatch(headers["content-type"], @"boundary=""(.*?)""", RegexOptions.IgnoreCase))
+            {
+                returnValue.Boundary = Regex.Match(headers["content-type"], @"boundary=""(.*?)""", RegexOptions.IgnoreCase).Groups[1].Value;
+            }
+            else if (Regex.IsMatch(headers["content-type"], @"boundary=(.*?)(;|$)", RegexOptions.IgnoreCase))
+            {
+                returnValue.Boundary = Regex.Match(headers["content-type"], @"boundary=(.*?)(;|$)", RegexOptions.IgnoreCase).Groups[1].Value;
+            }
+            if (Regex.IsMatch(headers["content-type"], @"charset=""(.*?)""", RegexOptions.IgnoreCase))
+            {
+                returnValue.CharSet = Regex.Match(headers["content-type"], @"charset=""(.*?)""", RegexOptions.IgnoreCase).Groups[1].Value;
+            }
+            if (Regex.IsMatch(headers["content-type"], @"charset=(.*?)(;|$)", RegexOptions.IgnoreCase))
+            {
+                returnValue.CharSet = Regex.Match(headers["content-type"], @"charset=(.*?)(;|$)", RegexOptions.IgnoreCase).Groups[1].Value;
+            }
+
             return returnValue;
         }
 
         private static void FixStandardFields(MailMessage message)
         {
-            if(message.Headers["content-type"]!= null) 
+            if(message.Headers["content-type"]!= null)
             {
 
                 //extract the value of the content-type
@@ -123,8 +191,10 @@ namespace netDumbster.smtp
                                         viewsToBeRemoved.Add(view);
                                     }
                                     else
+                                    {
                                         view.LinkedResources.Add(res);
-                                    
+                                    }
+
                                     toBeRemoved.Add(att.ContentId);
                                 }
                             }
@@ -153,7 +223,9 @@ namespace netDumbster.smtp
 
             }
             if (string.IsNullOrEmpty(message.Subject))
+            {
                 message.Subject = GetHeaderValue(message.Headers, "subject");
+            }
             if (message.From == null)
             {
                 if (!string.IsNullOrEmpty(message.Headers["from"]))
@@ -169,12 +241,14 @@ namespace netDumbster.smtp
                     }
                 }
                 else
+                {
                     message.From = new MailAddress("missing@missing.biz");
+                }
             }
 
-           FillAddressesCollection(message.CC, message.Headers["cc"]);
-           FillAddressesCollection(message.To, message.Headers["to"]);
-           FillAddressesCollection(message.Bcc, message.Headers["bcc"]);
+            FillAddressesCollection(message.CC, message.Headers["cc"]);
+            FillAddressesCollection(message.To, message.Headers["to"]);
+            FillAddressesCollection(message.Bcc, message.Headers["bcc"]);
 
             foreach (AlternateView view in message.AlternateViews)
             {
@@ -190,35 +264,17 @@ namespace netDumbster.smtp
             }
         }
 
-       private static void FillAddressesCollection(ICollection<MailAddress> addresses, string addressHeader)
-       {
-          if(string.IsNullOrEmpty(addressHeader))
-             return;
-
-          string[] emails = addressHeader.Split(',');
-
-          for (int i = 0; i < emails.Length; i++)
-          {
-             MailAddress address;
-
-             try
-             {
-                address = new MailAddress(emails[i]);
-             }
-             catch
-             {
-                if (i < emails.Length - 1)
+        private static string GetHeaderValue(NameValueCollection collection, string key)
+        {
+            foreach (string k in collection.Keys)
+            {
+                if(k.Equals(key,StringComparison.InvariantCultureIgnoreCase))
                 {
-                   address = new MailAddress(emails[i] + "," + emails[i + 1]);
-                   i++;
+                    return collection[k];
                 }
-                else
-                   address = new MailAddress("missing@missing.biz");
-             }
-
-             addresses.Add(address);
-          }
-       }
+            }
+            return string.Empty;
+        }
 
         private static string GetStringFromStream(Stream stream, ContentType contentType)
         {
@@ -228,43 +284,13 @@ namespace netDumbster.smtp
             string returnValue = string.Empty;
             switch (contentType.CharSet.ToLower())
             {
-                case "utf-8":
-                    returnValue = System.Text.UTF8Encoding.UTF8.GetString(buffer);
-                    break;
-                case "utf-7":
-                    returnValue = System.Text.UTF7Encoding.UTF7.GetString(buffer);
-                    break;
+            case "utf-8":
+                returnValue = System.Text.UTF8Encoding.UTF8.GetString(buffer);
+                break;
+            case "utf-7":
+                returnValue = System.Text.UTF7Encoding.UTF7.GetString(buffer);
+                break;
             }
-            return returnValue;
-        }
-
-        private static AlternateView ImportText(StringReader r, string encoding, System.Net.Mime.ContentType contentType)
-        {
-            string line = string.Empty;
-            StringBuilder b = new StringBuilder();
-            while ((line = r.ReadLine())!= null)
-            {
-                switch (encoding)
-                {
-                    case "quoted-printable":
-                        if (line.EndsWith("="))
-                            b.Append(DecodeQP(line.TrimEnd('=')));
-                        else
-                            // b.Append(DecodeQP(line) + "\n");
-                            b.Append(DecodeQP(line));
-                        break;
-                    case "base64":
-                        // b.Append(DecodeBase64(line, contentType.CharSet));
-                        b.Append(line);
-                        break;
-                    default:
-                        b.Append(line);
-                        break;
-                }
-            }
-            
-            AlternateView returnValue = AlternateView.CreateAlternateViewFromString(b.ToString(), null, contentType.MediaType);
-            returnValue.TransferEncoding = TransferEncoding.QuotedPrintable;
             return returnValue;
         }
 
@@ -288,7 +314,9 @@ namespace netDumbster.smtp
                     break;
             }
             if (headers["content-id"] != null)
+            {
                 returnValue.ContentId = headers["content-id"].ToString().Trim('<', '>');
+            }
             else if (headers["content-location"] != null)
             {
                 returnValue.ContentId = "tmpContentId123_" + headers["content-location"].ToString();
@@ -314,61 +342,63 @@ namespace netDumbster.smtp
                     if (tmpMessage != null)
                     {
                         foreach (AlternateView view in tmpMessage.AlternateViews)
+                        {
                             returnValue.AlternateViews.Add(view);
+                        }
                         foreach (Attachment att in tmpMessage.Attachments)
+                        {
                             returnValue.Attachments.Add(att);
+                        }
                         if (line.Equals("--" + multipartBoundary))
+                        {
                             part = new StringBuilder();
+                        }
                         else
+                        {
                             break;
+                        }
                     }
                 }
                 else
+                {
                     part.AppendLine(line);
+                }
             }
             return returnValue;
         }
 
-        private static string GetHeaderValue(NameValueCollection collection, string key)
+        private static AlternateView ImportText(StringReader r, string encoding, System.Net.Mime.ContentType contentType)
         {
-            foreach (string k in collection.Keys)
+            string line = string.Empty;
+            StringBuilder b = new StringBuilder();
+            while ((line = r.ReadLine())!= null)
             {
-                if(k.Equals(key,StringComparison.InvariantCultureIgnoreCase))
-                    return collection[k];
+                switch (encoding)
+                {
+                    case "quoted-printable":
+                        if (line.EndsWith("="))
+                        {
+                            b.Append(DecodeQP(line.TrimEnd('=')));
+                        }
+                        else
+                            // b.Append(DecodeQP(line) + "\n");
+                        {
+                            b.Append(DecodeQP(line));
+                        }
+                        break;
+                    case "base64":
+                        // b.Append(DecodeBase64(line, contentType.CharSet));
+                        b.Append(line);
+                        break;
+                    default:
+                        b.Append(line);
+                        break;
+                }
             }
-            return string.Empty;
-        }
 
-        private static System.Net.Mime.ContentType FindContentType(NameValueCollection headers)
-        {
-            System.Net.Mime.ContentType returnValue = new ContentType();
-            if (headers["content-type"] == null)
-                return returnValue;
-            returnValue = new System.Net.Mime.ContentType(Regex.Match(headers["content-type"], @"^([^;]*)", RegexOptions.IgnoreCase).Groups[1].Value);
-            if(Regex.IsMatch(headers["content-type"],  @"name=""?(.*?)""?($|;)", RegexOptions.IgnoreCase))
-                returnValue.Name = Regex.Match(headers["content-type"],  @"name=""?(.*?)""?($|;)", RegexOptions.IgnoreCase).Groups[1].Value;
-            if (Regex.IsMatch(headers["content-type"], @"boundary=""(.*?)""", RegexOptions.IgnoreCase))
-                returnValue.Boundary = Regex.Match(headers["content-type"], @"boundary=""(.*?)""", RegexOptions.IgnoreCase).Groups[1].Value;
-            else if (Regex.IsMatch(headers["content-type"], @"boundary=(.*?)(;|$)", RegexOptions.IgnoreCase))
-                returnValue.Boundary = Regex.Match(headers["content-type"], @"boundary=(.*?)(;|$)", RegexOptions.IgnoreCase).Groups[1].Value;
-            if (Regex.IsMatch(headers["content-type"], @"charset=""(.*?)""", RegexOptions.IgnoreCase))
-                returnValue.CharSet = Regex.Match(headers["content-type"], @"charset=""(.*?)""", RegexOptions.IgnoreCase).Groups[1].Value;
-            if (Regex.IsMatch(headers["content-type"], @"charset=(.*?)(;|$)", RegexOptions.IgnoreCase))
-                returnValue.CharSet = Regex.Match(headers["content-type"], @"charset=(.*?)(;|$)", RegexOptions.IgnoreCase).Groups[1].Value;
-
+            AlternateView returnValue = AlternateView.CreateAlternateViewFromString(b.ToString(), null, contentType.MediaType);
+            returnValue.TransferEncoding = TransferEncoding.QuotedPrintable;
             return returnValue;
-        }
-
-        private static void DecodeHeaders(NameValueCollection headers)
-        {
-            ArrayList tmpKeys = new ArrayList(headers.Keys);
-
-            foreach (string key in headers.AllKeys)
-            {
-                //strip qp encoding information from the header if present
-                headers[key] = Regex.Replace(headers[key].ToString(), @"=\?.*?\?Q\?(.*?)\?=", new MatchEvaluator(MyMatchEvaluator), RegexOptions.IgnoreCase | RegexOptions.Multiline);
-                headers[key] = Regex.Replace(headers[key].ToString(), @"=\?.*?\?B\?(.*?)\?=", new MatchEvaluator(MyMatchEvaluatorBase64), RegexOptions.IgnoreCase | RegexOptions.Multiline);
-            }
         }
 
         private static string MyMatchEvaluator(Match m)
@@ -382,46 +412,69 @@ namespace netDumbster.smtp
             return enc.GetString(Convert.FromBase64String(m.Groups[1].Value));
         }
 
-        private static string DecodeBase64(string line, string enc)
+        private static MailMessage ParseMessageRec(StringReader mimeMail)
         {
-            string returnValue = string.Empty;
-            switch (enc.ToLower())
+            MailMessage returnValue = new MailMessage();
+            string line = string.Empty;
+            string lastHeader = string.Empty;
+            while ((!string.IsNullOrEmpty(line = mimeMail.ReadLine()) && (line.Trim().Length != 0)))
             {
-                case "utf-7":
-                    returnValue = System.Text.Encoding.UTF7.GetString(Convert.FromBase64String(line));
+
+                //If the line starts with a whitespace it is a continuation of the previous line
+                if (Regex.IsMatch(line, @"^\s"))
+                {
+                    returnValue.Headers[lastHeader] = GetHeaderValue(returnValue.Headers,lastHeader) + " " + line.TrimStart('\t',' ');
+                }
+                else
+                {
+                    string headerkey = line.Substring(0, line.IndexOf(':')).ToLower();
+                    string value = line.Substring(line.IndexOf(':') + 1).TrimStart(' ');
+                    if (value.Length > 0)
+                    {
+                        returnValue.Headers[headerkey] = line.Substring(line.IndexOf(':') + 1).TrimStart(' ');
+                    }
+                    lastHeader = headerkey;
+                }
+            }
+            if (returnValue.Headers.Count == 0)
+            {
+                return null;
+            }
+            DecodeHeaders(returnValue.Headers);
+            string contentTransferEncoding = string.Empty;
+            if (!string.IsNullOrEmpty(returnValue.Headers["content-transfer-encoding"]))
+            {
+                contentTransferEncoding = returnValue.Headers["content-transfer-encoding"];
+            }
+            System.Net.Mime.ContentType tmpContentType = FindContentType(returnValue.Headers);
+            string contentId = string.Empty;
+
+            switch (tmpContentType.MediaType)
+            {
+                case "multipart/alternative":
+                case "multipart/related":
+                case "multipart/mixed":
+                    MailMessage tmpMessage = ImportMultiPartAlternative(tmpContentType.Boundary, mimeMail);
+                    foreach (AlternateView view in tmpMessage.AlternateViews)
+                    {
+                        returnValue.AlternateViews.Add(view);
+                    }
+                    foreach (Attachment att in tmpMessage.Attachments)
+                    {
+                        returnValue.Attachments.Add(att);
+                    }
                     break;
-                case "utf-8":
-                    returnValue = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(line));
+                case "text/html":
+                case "text/plain":
+                    returnValue.AlternateViews.Add(ImportText(mimeMail, contentTransferEncoding, tmpContentType));
                     break;
                 default:
+                    returnValue.Attachments.Add(ImportAttachment(mimeMail, contentTransferEncoding, tmpContentType, returnValue.Headers));
                     break;
             }
-
             return returnValue;
         }
 
-        private static byte[] DecodeBase64Binary(string line)
-        {
-            return Convert.FromBase64String(line);
-        }
-
-        private static string DecodeQP(string trall)
-        {
-            StringBuilder b = new StringBuilder();
-            for (int i = 0; i < trall.Length; i++)
-            {
-                if (trall[i] == '=')
-                {
-                    byte tmpbyte = Convert.ToByte(trall.Substring(i + 1, 2), 16);
-                    i += 2;
-                    b.Append((char)tmpbyte);
-                }
-                else if (trall[i] == '_')
-                    b.Append(' ');
-                else
-                    b.Append(trall[i]);
-            }
-            return b.ToString();
-        }
+        #endregion Methods
     }
 }

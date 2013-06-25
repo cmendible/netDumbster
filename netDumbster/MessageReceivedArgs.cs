@@ -11,11 +11,23 @@ namespace netDumbster.smtp
 
     public class MessageReceivedArgs : EventArgs
     {
-        public SmtpMessage Message { get; set; }
+        #region Constructors
 
         public MessageReceivedArgs(SmtpMessage message)
         {
             Message = message;
         }
+
+        #endregion Constructors
+
+        #region Properties
+
+        public SmtpMessage Message
+        {
+            get;
+            set;
+        }
+
+        #endregion Properties
     }
 }

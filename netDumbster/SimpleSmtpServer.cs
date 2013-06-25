@@ -63,7 +63,7 @@ namespace netDumbster.smtp
 
         public event EventHandler<MessageReceivedArgs> MessageReceived;
 
-        #endregion
+        #endregion Events
 
         #region Properties
 
@@ -73,7 +73,8 @@ namespace netDumbster.smtp
         /// <value>The port.</value>
         public int Port
         {
-            get; private set;
+            get;
+            private set;
         }
 
         /// <summary>
@@ -84,8 +85,10 @@ namespace netDumbster.smtp
         {
             get
             {
-                lock(this)
+                lock (this)
+                {
                     return this.smtpMessageStore.ToArray();
+                }
             }
         }
 
@@ -98,18 +101,41 @@ namespace netDumbster.smtp
             get
             {
                 lock (this)
+                {
                     return this.smtpMessageStore.Count;
+                }
             }
         }
 
         internal AutoResetEvent ServerReady
         {
-            get; set;
+            get;
+            set;
         }
 
         #endregion Properties
 
         #region Methods
+
+        /// <summary>
+        /// Gets the random unused port.
+        /// </summary>
+        /// <returns></returns>
+        public static int GetRandomUnusedPort()
+        {
+            try
+            {
+                var listener = new TcpListener(IPAddress.Any, 0);
+                listener.Start();
+                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+                listener.Stop();
+                return port;
+            }
+            catch
+            {
+                throw;
+            }
+        }
 
         /// <summary>
         /// Starts server listening to a random port.
@@ -219,26 +245,6 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
-        /// Gets the random unused port.
-        /// </summary>
-        /// <returns></returns>
-        public static int GetRandomUnusedPort()
-        {
-            try
-            {
-                var listener = new TcpListener(IPAddress.Any, 0);
-                listener.Start();
-                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-                listener.Stop();
-                return port;
-            }
-            catch          
-            {
-                throw;
-            }
-        } 
-
-        /// <summary>
         /// Async Socket handler.
         /// </summary>
         /// <param name="result">The result.</param>
@@ -263,12 +269,12 @@ namespace netDumbster.smtp
                     log.Debug("Socket accepted and ready to be processed.");
                     SmtpProcessor processor = new SmtpProcessor(string.Empty, smtpMessageStore);
                     processor.MessageReceived += (sender, args) =>
+                    {
+                        if (MessageReceived != null)
                         {
-                            if (MessageReceived != null)
-                            {
-                                MessageReceived(this, args);
-                            }
-                        };
+                            MessageReceived(this, args);
+                        }
+                    };
                     processor.ProcessConnection(socket);
                 }
             }

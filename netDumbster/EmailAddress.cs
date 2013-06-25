@@ -40,7 +40,7 @@ namespace netDumbster.smtp
         /// <exception cref="InvalidEmailAddressException">
         /// Thrown if the username or domain is invalid.
         /// </exception>
-        public EmailAddress( string address )
+        public EmailAddress(string address)
         {
             Address = address;
         }
@@ -51,7 +51,7 @@ namespace netDumbster.smtp
         /// <exception cref="InvalidEmailAddressException">
         /// Thrown if the username or domain is invalid.
         /// </exception>
-        public EmailAddress( string username, string domain )
+        public EmailAddress(string username, string domain)
         {
             Username = username;
             Domain = domain;
@@ -76,13 +76,13 @@ namespace netDumbster.smtp
             set
             {
                 // Verify it isn't null/empty.
-                if( value == null || value.Length == 0 )
+                if(value == null || value.Length == 0)
                 {
                     throw new InvalidEmailAddressException( "Invalid address.  Specified address is empty" );
                 }
 
-                String[] addressParts = value.Split( "@".ToCharArray() );
-                if( addressParts.Length != 2 )
+                String[] addressParts = value.Split("@".ToCharArray());
+                if(addressParts.Length != 2)
                 {
                     throw new InvalidEmailAddressException( "Invalid address.  The address must be formatted as: username@domain." );
                 }
@@ -110,13 +110,13 @@ namespace netDumbster.smtp
             }
             set
             {
-                if( value == null || value.Length < 5 )
+                if(value == null || value.Length < 5)
                 {
                     throw new InvalidEmailAddressException( "Invalid domian.  Domain must be at least 5 charecters (a.com, a.edu, etc...)" );
                 }
 
                 // Verify that the username does not contain illegal characters.
-                VerifySpecialCharacters( value );
+                VerifySpecialCharacters(value);
 
                 domain = value;
             }
@@ -137,13 +137,13 @@ namespace netDumbster.smtp
             }
             set
             {
-                if( value == null || value.Length == 0 )
+                if(value == null || value.Length == 0)
                 {
                     throw new InvalidEmailAddressException( "Invalid username.  Username must be at least one charecter" );
                 }
 
                 // Verify that the username does not contain illegal characters.
-                VerifySpecialCharacters( value );
+                VerifySpecialCharacters(value);
 
                 username = value;
             }
@@ -164,17 +164,17 @@ namespace netDumbster.smtp
 
         /// <summary>
         /// Checks the specified string to verify it does not
-        /// contain any of the following characters: ( ) &lt; &gt; @ , ; : \ " . [ ]  
+        /// contain any of the following characters: ( ) &lt; &gt; @ , ; : \ " . [ ]
         /// </summary>
         /// <param name="data">The string to test</param>
         /// <exception cref="InvalidEmailAddressException">
         /// Thrown if the data contains any illegal special characters.
         /// </exception>
-        private void VerifySpecialCharacters( String data )
+        private void VerifySpecialCharacters(string data)
         {
-            if( ILLEGAL_CHARACTERS.IsMatch( data ) )
+            if(ILLEGAL_CHARACTERS.IsMatch(data))
             {
-                throw new InvalidEmailAddressException( "Invalid address.  The username and domain address parts can not contain any of the following characters: ( ) < > @ , ; : \\ \" . [ ]" );
+                throw new InvalidEmailAddressException("Invalid address.  The username and domain address parts can not contain any of the following characters: ( ) < > @ , ; : \\ \" . [ ]");
             }
         }
 

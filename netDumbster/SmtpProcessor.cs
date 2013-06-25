@@ -12,12 +12,12 @@ namespace netDumbster.smtp
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Net;
+    using System.Net.Mail;
     using System.Net.Sockets;
     using System.Text;
     using System.Text.RegularExpressions;
 
     using netDumbster.smtp.Logging;
-    using System.Net.Mail;
 
     /// <summary>
     /// SMTPProcessor handles a single SMTP client connection.  This
@@ -71,7 +71,7 @@ namespace netDumbster.smtp
         private static readonly Regex ADDRESS_REGEX = new Regex("<.+@.+>", RegexOptions.IgnoreCase);
 
         /// <summary>
-        /// Context holding refenrece to Socket 
+        /// Context holding refenrece to Socket
         /// </summary>
         SmtpContext context;
 
@@ -95,7 +95,7 @@ namespace netDumbster.smtp
         #region Constructors
 
         /// <summary>
-        /// Initializes the SMTPProcessor with the appropriate 
+        /// Initializes the SMTPProcessor with the appropriate
         /// interface implementations.  This allows the relay and
         /// delivery behaviour of the SMTPProcessor to be defined
         /// by the specific server.
@@ -117,7 +117,7 @@ namespace netDumbster.smtp
 
         public event EventHandler<MessageReceivedArgs> MessageReceived;
 
-        #endregion
+        #endregion Events
 
         #region Properties
 
@@ -162,7 +162,7 @@ namespace netDumbster.smtp
         /// <summary>
         /// ProcessConnection handles a connected TCP Client
         /// and performs all necessary interaction with this
-        /// client to comply with RFC821.  This method is thread 
+        /// client to comply with RFC821.  This method is thread
         /// safe.
         /// </summary>
         public void ProcessConnection(Socket socket)
@@ -182,7 +182,9 @@ namespace netDumbster.smtp
         public void Stop()
         {
             if (context == null)
+            {
                 return;
+            }
 
             log.Debug("trying to stop processor.");
             log.Debug("Shutting down Socket.");
@@ -223,7 +225,7 @@ namespace netDumbster.smtp
             {
                 SmtpMessage smtpMessage = new SmtpMessage(message.ToString());
                 smtpMessageStore.Add(smtpMessage);
-                if(MessageReceived != null) 
+                if(MessageReceived != null)
                 {
                     MessageReceived(this, new MessageReceivedArgs(smtpMessage));
                 }
@@ -357,42 +359,42 @@ namespace netDumbster.smtp
 
                     switch (inputs[0].ToLower())
                     {
-                        case "helo":
-                            Helo(context, inputs);
+                    case "helo":
+                        Helo(context, inputs);
+                        break;
+                    case "rset":
+                        Rset(context);
+                        break;
+                    case "noop":
+                        context.WriteLine(MESSAGE_OK);
+                        break;
+                    case "quit":
+                        isRunning = false;
+                        context.WriteLine(MESSAGE_GOODBYE);
+                        context.Close();
+                        break;
+                    case "mail":
+                        if (inputs[1].ToLower().StartsWith("from"))
+                        {
+                            Mail(context, inputLine.Substring(inputLine.IndexOf(" ")));
                             break;
-                        case "rset":
-                            Rset(context);
+                        }
+                        context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
+                        break;
+                    case "rcpt":
+                        if (inputs[1].ToLower().StartsWith("to"))
+                        {
+                            Rcpt(context, inputLine.Substring(inputLine.IndexOf(" ")));
                             break;
-                        case "noop":
-                            context.WriteLine(MESSAGE_OK);
-                            break;
-                        case "quit":
-                            isRunning = false;
-                            context.WriteLine(MESSAGE_GOODBYE);
-                            context.Close();
-                            break;
-                        case "mail":
-                            if (inputs[1].ToLower().StartsWith("from"))
-                            {
-                                Mail(context, inputLine.Substring(inputLine.IndexOf(" ")));
-                                break;
-                            }
-                            context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
-                            break;
-                        case "rcpt":
-                            if (inputs[1].ToLower().StartsWith("to"))
-                            {
-                                Rcpt(context, inputLine.Substring(inputLine.IndexOf(" ")));
-                                break;
-                            }
-                            context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
-                            break;
-                        case "data":
-                            Data(context);
-                            break;
-                        default:
-                            context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
-                            break;
+                        }
+                        context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
+                        break;
+                    case "data":
+                        Data(context);
+                        break;
+                    default:
+                        context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
+                        break;
                     }
                 }
                 catch (Exception ex)
@@ -400,7 +402,9 @@ namespace netDumbster.smtp
                     SocketException sx = ex as SocketException;
 
                     if (sx != null && sx.ErrorCode == 10060)
+                    {
                         context.WriteLine(MESSAGE_GOODBYE);
+                    }
                     //else
                     //    context.WriteLine(MESSAGE_SYSTEM_ERROR);
 

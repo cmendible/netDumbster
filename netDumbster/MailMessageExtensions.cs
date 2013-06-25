@@ -7,16 +7,14 @@
 
 namespace netDumbster.smtp
 {
-    using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using netDumbster.smtp;
-    using System.Net.Mail;
     using System.IO;
+    using System.Net.Mail;
 
     public static class MailMessageExtensions
     {
+        #region Methods
+
         public static SmtpMessagePart[] Parts(this MailMessage mailMessage)
         {
             List<SmtpMessagePart> parts = new List<SmtpMessagePart>();
@@ -47,5 +45,7 @@ namespace netDumbster.smtp
             var reader = new StreamReader(stream);
             return reader.ReadToEnd();
         }
+
+        #endregion Methods
     }
 }

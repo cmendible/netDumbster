@@ -10,11 +10,11 @@ namespace netDumbster.smtp
 {
     using System;
     using System.Collections;
+    using System.Collections.Specialized;
     using System.Linq;
     using System.Net.Mail;
     using System.Text;
     using System.Text.RegularExpressions;
-    using System.Collections.Specialized;
 
     /// <summary>
     /// Stores an incoming SMTP Message.
@@ -24,6 +24,7 @@ namespace netDumbster.smtp
         #region Fields
 
         private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
+
         private string data;
 
         #endregion Fields
@@ -84,9 +85,13 @@ namespace netDumbster.smtp
             get
             {
                 if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("importance"))
+                {
                     return Headers["importance"].ToString();
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
         }
 
@@ -105,9 +110,13 @@ namespace netDumbster.smtp
             get
             {
                 if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("priority"))
+                {
                     return Headers["priority"].ToString();
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
         }
 
@@ -126,9 +135,13 @@ namespace netDumbster.smtp
             get
             {
                 if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("x-priority"))
+                {
                     return Headers["x-priority"].ToString();
+                }
                 else
+                {
                     return string.Empty;
+                }
             }
         }
 

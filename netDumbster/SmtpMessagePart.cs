@@ -10,8 +10,8 @@ namespace netDumbster.smtp
 {
     using System;
     using System.Collections;
-    using System.Text.RegularExpressions;
     using System.Collections.Specialized;
+    using System.Text.RegularExpressions;
 
     /// <summary>
     /// Stores a single part of a multipart message.
@@ -30,19 +30,6 @@ namespace netDumbster.smtp
 
         #region Constructors
 
-        /// <summary>
-        /// Creates a new message part.  The input string should be the body of 
-        /// the attachment, without the "------=_NextPart" separator strings.
-        /// The last 4 characters of the data will be "\r\n\r\n".
-        /// </summary>
-        public SmtpMessagePart(string data)
-        {
-            string[] parts = Regex.Split( data, DOUBLE_NEWLINE );
-
-            headerData = parts[0];
-            bodyData = parts[1];
-        }
-
         public SmtpMessagePart(string header, string body)
         {
             headerData = header;
@@ -58,7 +45,10 @@ namespace netDumbster.smtp
         /// </summary>
         public string BodyData
         {
-            get { return bodyData; }
+            get
+            {
+                return bodyData;
+            }
         }
 
         /// <summary>
@@ -66,7 +56,10 @@ namespace netDumbster.smtp
         /// </summary>
         public string HeaderData
         {
-            get { return headerData; }
+            get
+            {
+                return headerData;
+            }
         }
 
         /// <summary>

@@ -24,8 +24,8 @@ namespace netDumbster.smtp
         /// <summary>
         /// Creates a new Exception with a user-displayable message.
         /// </summary>
-        public InvalidEmailAddressException( string userMessage )
-            : base(userMessage)
+        public InvalidEmailAddressException(string userMessage)
+        : base(userMessage)
         {
         }
 

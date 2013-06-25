@@ -9,16 +9,14 @@ namespace netDumbster.Test
 {
     using System;
     using System.IO;
-    using System.Linq;
     using System.Net;
     using System.Net.Mail;
+    using System.Net.Mime;
 
     using netDumbster.smtp;
     using netDumbster.smtp.Logging;
 
     using NUnit.Framework;
-    using System.Net.Mime;
-    using System.Collections.Generic;
 
     [TestFixture]
     public class Tests
@@ -40,12 +38,6 @@ namespace netDumbster.Test
         #endregion Constructors
 
         #region Methods
-
-        [TearDown]
-        public void TearDown()
-        {
-            server.Stop();
-        }
 
         [Test]
         public void Send_100_Mails()
@@ -102,6 +94,46 @@ namespace netDumbster.Test
         }
 
         [Test]
+        public void Send_Email_With_AlternateViews()
+        {
+            using (var client = new SmtpClient("localhost", this.server.Port))
+            {
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
+                mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
+                client.Send(mailMessage);
+            }
+            Assert.AreEqual(1, server.ReceivedEmailCount);
+            var smtpMessage = server.ReceivedEmail[0];
+
+            Assert.AreEqual(2, smtpMessage.MessageParts.Length);
+            Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
+            Assert.AreEqual("this is the body", smtpMessage.MessageParts[0].BodyData);
+            Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
+            Assert.AreEqual("FooBar", smtpMessage.MessageParts[1].BodyData);
+        }
+
+        [Test]
+        public void Send_Email_With_AlternateViews_And_Attachments()
+        {
+            using (var client = new SmtpClient("localhost", this.server.Port))
+            {
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
+                mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
+                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment1", new ContentType("application/octet-stream")));
+                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment2", new ContentType("application/octet-stream")));
+                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment3", new ContentType("application/octet-stream")));
+                client.Send(mailMessage);
+            }
+            Assert.AreEqual(1, server.ReceivedEmailCount);
+            var smtpMessage = server.ReceivedEmail[0];
+            Assert.AreEqual(5, smtpMessage.MessageParts.Length);
+            Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
+            Assert.AreEqual("this is the body", smtpMessage.MessageParts[0].BodyData);
+            Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
+            Assert.AreEqual("FooBar", smtpMessage.MessageParts[1].BodyData);
+        }
+
+        [Test]
         public void Send_Email_With_Attachment()
         {
             var data = new byte[] { 0x1 };
@@ -113,6 +145,20 @@ namespace netDumbster.Test
             Assert.IsNotNull(server.ReceivedEmail[0].MessageParts[1].BodyData);
             Assert.IsNotEmpty(server.ReceivedEmail[0].MessageParts[1].BodyData);
             Assert.AreEqual(System.Convert.ToBase64String(data) + "\r\n", server.ReceivedEmail[0].MessageParts[1].BodyData);
+        }
+
+        [Test]
+        public void Send_Email_With_Many_Lines()
+        {
+            using (SmtpClient client = new SmtpClient("localhost", server.Port))
+            {
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body\r\nline2\r\nline3");
+                mailMessage.IsBodyHtml = false;
+                client.Send(mailMessage);
+            }
+
+            Assert.AreEqual(1, server.ReceivedEmailCount);
+            Assert.AreEqual("this is the body\r\nline2\r\nline3", server.ReceivedEmail[0].MessageParts[0].BodyData);
         }
 
         [Test]
@@ -134,31 +180,17 @@ namespace netDumbster.Test
         }
 
         [Test]
-        public void Send_Email_With_Many_Lines()
-        {
-            using (SmtpClient client = new SmtpClient("localhost", server.Port))
-            {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body\r\nline2\r\nline3");
-                mailMessage.IsBodyHtml = false;
-                client.Send(mailMessage);
-            }
-
-            Assert.AreEqual(1, server.ReceivedEmailCount);
-            Assert.AreEqual("this is the body\r\nline2\r\nline3", server.ReceivedEmail[0].MessageParts[0].BodyData);
-        }
-
-        [Test]
         public void Send_Email_With_RussianText()
         {
             string body = string.Empty;
             using (SmtpClient client = new SmtpClient("localhost", server.Port))
             {
                 body = "Съешь ещё этих мягких французских булок, да выпей чаю" +
-                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
-                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
-                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
-                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
-                        "Съешь ещё этих мягких французских булок, да выпей чаю";
+                       "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                       "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                       "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                       "Съешь ещё этих мягких французских булок, да выпей чаю" +
+                       "Съешь ещё этих мягких французских булок, да выпей чаю";
                 var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", body);
                 mailMessage.IsBodyHtml = false;
                 client.Send(mailMessage);
@@ -167,9 +199,26 @@ namespace netDumbster.Test
             Assert.AreEqual(1, server.ReceivedEmailCount);
             Assert.AreEqual("base64", server.ReceivedEmail[0].Headers["content-transfer-encoding"]);
             Assert.AreEqual(body,
-                System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(server.ReceivedEmail[0].MessageParts[0].BodyData)));
+                            System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(server.ReceivedEmail[0].MessageParts[0].BodyData)));
 
             server.Stop();
+        }
+
+        [Test]
+        public void Send_Fires_Message_Received_Event()
+        {
+            int port = 50004;
+            SimpleSmtpServer fixedPortServer = SimpleSmtpServer.Start(port);
+            fixedPortServer.MessageReceived += (sender, args) =>
+            {
+                Assert.IsNotNull(args.Message);
+                Assert.AreEqual(1, fixedPortServer.ReceivedEmailCount);
+                Assert.AreEqual("this is the body", args.Message.MessageParts[0].BodyData);
+            };
+
+            SendMail(false, false, null, port);
+
+            fixedPortServer.Stop();
         }
 
         [Test]
@@ -206,23 +255,6 @@ namespace netDumbster.Test
             Assert.AreEqual(1, server.ReceivedEmailCount);
         }
 
-        [Test]
-        public void Send_Fires_Message_Received_Event()
-        {
-            int port = 50004;
-            SimpleSmtpServer fixedPortServer = SimpleSmtpServer.Start(port);
-            fixedPortServer.MessageReceived += (sender, args) =>
-            {
-                Assert.IsNotNull(args.Message);
-                Assert.AreEqual(1, fixedPortServer.ReceivedEmailCount);
-                Assert.AreEqual("this is the body", args.Message.MessageParts[0].BodyData);
-            };
-
-            SendMail(false, false, null, port);
-
-            fixedPortServer.Stop();
-        }
-
         [SetUp]
         public void SetUp()
         {
@@ -237,44 +269,10 @@ namespace netDumbster.Test
             randomPortServer.Stop();
         }
 
-        [Test]
-        public void Send_Email_With_AlternateViews()
+        [TearDown]
+        public void TearDown()
         {
-            using (var client = new SmtpClient("localhost", this.server.Port))
-            {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
-                mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
-                client.Send(mailMessage);
-            }
-            Assert.AreEqual(1, server.ReceivedEmailCount);
-            var smtpMessage = server.ReceivedEmail[0];
-
-            Assert.AreEqual(2, smtpMessage.MessageParts.Length);
-            Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
-            Assert.AreEqual("this is the body", smtpMessage.MessageParts[0].BodyData);
-            Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
-            Assert.AreEqual("FooBar", smtpMessage.MessageParts[1].BodyData);
-        }
-
-        [Test]
-        public void Send_Email_With_AlternateViews_And_Attachments()
-        {
-            using (var client = new SmtpClient("localhost", this.server.Port)) 
-            {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
-                mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
-                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment1", new ContentType("application/octet-stream")));
-                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment2", new ContentType("application/octet-stream")));
-                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment3", new ContentType("application/octet-stream")));
-                client.Send(mailMessage);
-            }
-            Assert.AreEqual(1, server.ReceivedEmailCount);
-            var smtpMessage = server.ReceivedEmail[0];
-            Assert.AreEqual(5, smtpMessage.MessageParts.Length);
-            Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
-            Assert.AreEqual("this is the body", smtpMessage.MessageParts[0].BodyData);
-            Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
-            Assert.AreEqual("FooBar", smtpMessage.MessageParts[1].BodyData);
+            server.Stop();
         }
 
         private void SendMail()
@@ -300,7 +298,9 @@ namespace netDumbster.Test
                 mailMessage.IsBodyHtml = isBodyHtml;
 
                 if (isBodyHtml)
+                {
                     mailMessage.Body = "this is the html body";
+                }
 
                 if (smtpAuth)
                 {
@@ -318,7 +318,5 @@ namespace netDumbster.Test
         }
 
         #endregion Methods
-
     }
-
 }
