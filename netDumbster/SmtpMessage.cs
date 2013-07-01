@@ -15,6 +15,7 @@ namespace netDumbster.smtp
     using System.Net.Mail;
     using System.Text;
     using System.Text.RegularExpressions;
+    using System.Net;
 
     /// <summary>
     /// Stores an incoming SMTP Message.
@@ -41,8 +42,12 @@ namespace netDumbster.smtp
             {
                 this.Headers = mailMessage.Headers;
                 this.FromAddress = new EmailAddress(mailMessage.From.Address);
-                this.ToAddresses = this.rawSmtpMessage.Recipients.ToArray();
+                this.ToAddresses = rawSmtpMessage.Recipients.ToArray();
                 this.MessageParts = mailMessage.Parts();
+                this.LocalIPAddress = rawSmtpMessage.LocalIPAddress;
+                this.LocalPort = rawSmtpMessage.LocalPort;
+                this.RemoteIPAddress = rawSmtpMessage.RemoteIPAddress;
+                this.RemotePort = rawSmtpMessage.RemotePort;
             }
         }
 
@@ -143,6 +148,42 @@ namespace netDumbster.smtp
                     return string.Empty;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the remote IP address.
+        /// </summary>
+        public IPAddress RemoteIPAddress
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the local IP address.
+        /// </summary>
+        public IPAddress LocalIPAddress
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the remote port.
+        /// </summary>
+        public int RemotePort
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the local port.
+        /// </summary>
+        public int LocalPort
+        {
+            get;
+            private set;
         }
 
         #endregion Properties

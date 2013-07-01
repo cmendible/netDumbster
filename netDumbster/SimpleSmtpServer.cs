@@ -50,8 +50,19 @@ namespace netDumbster.smtp
         /// Initializes a new instance of the <see cref="SimpleSmtpServer"/> class.
         /// </summary>
         /// <param name="port">The port.</param>
-        private SimpleSmtpServer(int port)
+        private SimpleSmtpServer(int port) 
+            : this(port, true)
         {
+        }
+
+        /// <summary>
+        /// Prevents a default instance of the <see cref="SimpleSmtpServer"/> class from being created.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        private SimpleSmtpServer(int port, bool useMessageStore)
+        {
+            this.UseMessageStore = useMessageStore;
             this.stop = false;
             Port = port;
             ServerReady = new AutoResetEvent(false);
@@ -138,17 +149,24 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
-        /// Starts server listening to a random port.
+        /// Starts this instance.
         /// </summary>
-        /// <param name="port">The port.</param>
         /// <returns></returns>
         public static SimpleSmtpServer Start()
         {
             int port = GetRandomUnusedPort();
-            var server = new SimpleSmtpServer(port);
-            new Thread(new ThreadStart(server.StartListening)).Start();
-            server.ServerReady.WaitOne();
-            return server;
+            return SimpleSmtpServer.Start(port, true);
+        }
+
+        /// <summary>
+        /// Starts the specified use message store.
+        /// </summary>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer Start(bool useMessageStore)
+        {
+            int port = GetRandomUnusedPort();
+            return SimpleSmtpServer.Start(port, useMessageStore);
         }
 
         /// <summary>
@@ -158,7 +176,18 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port)
         {
-            var server = new SimpleSmtpServer(port);
+            return SimpleSmtpServer.Start(port, true);
+        }
+
+        /// <summary>
+        /// Starts the specified port.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer Start(int port, bool useMessageStore)
+        {
+            var server = new SimpleSmtpServer(port, useMessageStore);
             new Thread(new ThreadStart(server.StartListening)).Start();
             server.ServerReady.WaitOne();
             return server;
@@ -245,6 +274,18 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
+        /// Gets a value indicating whether [use message store].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [use message store]; otherwise, <c>false</c>.
+        /// </value>
+        public bool UseMessageStore
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Async Socket handler.
         /// </summary>
         /// <param name="result">The result.</param>
@@ -267,7 +308,7 @@ namespace netDumbster.smtp
                 using (Socket socket = listener.EndAcceptSocket(result))
                 {
                     log.Debug("Socket accepted and ready to be processed.");
-                    SmtpProcessor processor = new SmtpProcessor(string.Empty, smtpMessageStore);
+                    SmtpProcessor processor = new SmtpProcessor(string.Empty, this.UseMessageStore ? this.smtpMessageStore : null);
                     processor.MessageReceived += (sender, args) =>
                     {
                         if (MessageReceived != null)

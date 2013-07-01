@@ -224,7 +224,10 @@ namespace netDumbster.smtp
             lock (smtpMessageStore)
             {
                 SmtpMessage smtpMessage = new SmtpMessage(rawSmtpMessage);
-                smtpMessageStore.Add(smtpMessage);
+                if (this.smtpMessageStore != null)
+                {
+                    smtpMessageStore.Add(smtpMessage);
+                }
                 if(MessageReceived != null)
                 {
                     MessageReceived(this, new MessageReceivedArgs(smtpMessage));

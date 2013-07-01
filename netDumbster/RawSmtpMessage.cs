@@ -12,15 +12,20 @@ namespace netDumbster.smtp
     using System.Linq;
     using System.Text;
     using netDumbster.smtp;
+    using System.Net;
 
     public class RawSmtpMessage
     {
         List<EmailAddress> recipients;
 
-        public RawSmtpMessage()
+        public RawSmtpMessage(IPAddress localIPAddress, int localPort, IPAddress remoteIPAddress, int remotePort)
         {
             this.Data = new StringBuilder();
             this.recipients = new List<EmailAddress>();
+            this.LocalIPAddress = localIPAddress;
+            this.LocalPort = localPort;
+            this.RemoteIPAddress = remoteIPAddress;
+            this.RemotePort = remotePort;
         }
         
         public StringBuilder Data
@@ -40,6 +45,42 @@ namespace netDumbster.smtp
         public void AddRecipient(EmailAddress recipient)
         {
             this.recipients.Add(recipient);
+        }
+
+        /// <summary>
+        /// Gets the remote IP address.
+        /// </summary>
+        public IPAddress RemoteIPAddress
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the local IP address.
+        /// </summary>
+        public IPAddress LocalIPAddress
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the remote port.
+        /// </summary>
+        public int RemotePort
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the local port.
+        /// </summary>
+        public int LocalPort
+        {
+            get;
+            private set;
         }
     }
 }

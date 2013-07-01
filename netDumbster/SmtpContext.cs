@@ -14,6 +14,7 @@ namespace netDumbster.smtp
 
     using netDumbster.smtp.Logging;
     using System.Collections.Generic;
+    using System.Net;
 
     /// <summary>
     /// Maintains the current state for a SMTP client connection.
@@ -52,6 +53,9 @@ namespace netDumbster.smtp
         private Socket socket;
         ILog _Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+        IPEndPoint remoteEndPoint;
+        IPEndPoint localEndPoint;
+
         #endregion Fields
 
         #region Constructors
@@ -63,13 +67,17 @@ namespace netDumbster.smtp
         {
             this.lastCommand = -1;
             this.socket = socket;
-            this.rawSmtpMessage = new RawSmtpMessage();
 
             // Set the encoding to ASCII.
-            encoding = Encoding.ASCII;
+            this.encoding = Encoding.ASCII;
 
             // Initialize the input buffer
-            inputBuffer = new StringBuilder();
+            this.inputBuffer = new StringBuilder();
+
+            this.remoteEndPoint = socket.RemoteEndPoint as IPEndPoint;
+            this.localEndPoint = socket.LocalEndPoint as IPEndPoint;
+
+            this.rawSmtpMessage = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
         }
 
         #endregion Constructors
@@ -192,7 +200,7 @@ namespace netDumbster.smtp
         {
             _Log.Debug("Resetting SmtpContext.");
             inputBuffer.Length = 0;
-            rawSmtpMessage = new RawSmtpMessage();
+            rawSmtpMessage = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
             lastCommand = SmtpProcessor.COMMAND_HELO;
             _Log.Debug("Done resetting SmtpContext.");
         }
