@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata >
     <id>netDumbster</id>
-    <version>1.4.0.0-alpha</version>
+    <version>1.4.0.0-beta</version>
     <authors>HexaSystems Inc.</authors>
 	<owners>HexaSystems Inc.</owners>
 	<dependencies>

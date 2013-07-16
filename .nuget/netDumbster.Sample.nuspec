@@ -2,11 +2,11 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>netDumbster.Sample</id>
-    <version>1.4.0.0-alpha</version>
+    <version>1.4.0.0-beta</version>
     <authors>HexaSystems Corporation</authors>
 	  <owners>HexaSystems Corporation</owners>
 	<dependencies>
-      <dependency id="netDumbster" version="1.4.0.0-alpha" />
+      <dependency id="netDumbster" version="1.4.0.0-beta" />
 	  <dependency id="NUnit" version="2.6.1" />
   </dependencies> 
 	<requireLicenseAcceptance>true</requireLicenseAcceptance>
