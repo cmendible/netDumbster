@@ -1,20 +1,16 @@
-﻿#region Header
-
-// Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
+﻿// Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
 // All rights reserved.
 // Modified by Carlos Mendible
-
-#endregion Header
 
 namespace netDumbster.smtp
 {
     using System;
+    using System.Collections.Generic;
+    using System.Net;
     using System.Net.Sockets;
     using System.Text;
 
     using netDumbster.smtp.Logging;
-    using System.Collections.Generic;
-    using System.Net;
 
     /// <summary>
     /// Maintains the current state for a SMTP client connection.
@@ -25,8 +21,6 @@ namespace netDumbster.smtp
     /// </remarks>
     public class SmtpContext
     {
-        #region Fields
-
         private const string EOL = "\r\n";
 
         /// <summary>The client domain, as specified by the helo command.</summary>
@@ -45,20 +39,15 @@ namespace netDumbster.smtp
 
         /// <summary>Last successful command received.</summary>
         private int lastCommand;
+        IPEndPoint localEndPoint;
 
         /// <summary>The incoming message.</summary>
         private RawSmtpMessage rawSmtpMessage;
+        IPEndPoint remoteEndPoint;
 
         /// <summary>The socket to the client.</summary>
         private Socket socket;
         ILog _Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
-        IPEndPoint remoteEndPoint;
-        IPEndPoint localEndPoint;
-
-        #endregion Fields
-
-        #region Constructors
 
         /// <summary>
         /// Initialize this context for a given socket connection.
@@ -80,10 +69,6 @@ namespace netDumbster.smtp
             this.rawSmtpMessage = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
         }
 
-        #endregion Constructors
-
-        #region Properties
-
         /// <summary>
         /// The client domain, as specified by the helo command.
         /// </summary>
@@ -91,11 +76,12 @@ namespace netDumbster.smtp
         {
             get
             {
-                return clientDomain;
+                return this.clientDomain;
             }
+
             set
             {
-                clientDomain = value;
+                this.clientDomain = value;
             }
         }
 
@@ -106,11 +92,12 @@ namespace netDumbster.smtp
         {
             get
             {
-                return lastCommand;
+                return this.lastCommand;
             }
+
             set
             {
-                lastCommand = value;
+                this.lastCommand = value;
             }
         }
 
@@ -121,11 +108,12 @@ namespace netDumbster.smtp
         {
             get
             {
-                return rawSmtpMessage;
+                return this.rawSmtpMessage;
             }
+
             set
             {
-                rawSmtpMessage = value;
+                this.rawSmtpMessage = value;
             }
         }
 
@@ -136,34 +124,30 @@ namespace netDumbster.smtp
         {
             get
             {
-                return socket;
+                return this.socket;
             }
         }
-
-        #endregion Properties
-
-        #region Methods
 
         /// <summary>
         /// Closes the socket connection to the client and performs any cleanup.
         /// </summary>
         public void Close()
         {
-            _Log.Debug("Closing SmtpContext.");
-            inputBuffer.Length = 0;
-            socket.Close();
-            _Log.Debug("SmtpContext Closed.");
+            this._Log.Debug("Closing SmtpContext.");
+            this.inputBuffer.Length = 0;
+            this.socket.Close();
+            this._Log.Debug("SmtpContext Closed.");
         }
 
         /// <summary>
         /// Reads an entire line from the socket.  This method
         /// will block until an entire line has been read.
         /// </summary>
-        public String ReadLine()
+        public string ReadLine()
         {
             // If we already buffered another line, just return
             // from the buffer.
-            string output = ReadBuffer();
+            string output = this.ReadBuffer();
             if (output != null)
             {
                 return output;
@@ -177,16 +161,16 @@ namespace netDumbster.smtp
             do
             {
                 // Read the input data.
-                count = socket.Receive(byteBuffer);
+                count = this.socket.Receive(byteBuffer);
 
                 if (count == 0)
                 {
                     return null;
                 }
 
-                inputBuffer.Append(encoding.GetString(byteBuffer, 0, count));
+                this.inputBuffer.Append(this.encoding.GetString(byteBuffer, 0, count));
             }
-            while ((output = ReadBuffer()) == null);
+            while ((output = this.ReadBuffer()) == null);
 
             // IO Log statement is in ReadBuffer...
 
@@ -198,11 +182,11 @@ namespace netDumbster.smtp
         /// </summary>
         public void Reset()
         {
-            _Log.Debug("Resetting SmtpContext.");
-            inputBuffer.Length = 0;
-            rawSmtpMessage = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
-            lastCommand = SmtpProcessor.COMMAND_HELO;
-            _Log.Debug("Done resetting SmtpContext.");
+            this._Log.Debug("Resetting SmtpContext.");
+            this.inputBuffer.Length = 0;
+            this.rawSmtpMessage = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
+            this.lastCommand = SmtpProcessor.COMMAND_HELO;
+            this._Log.Debug("Done resetting SmtpContext.");
         }
 
         /// <summary>
@@ -213,7 +197,7 @@ namespace netDumbster.smtp
         /// <param name="data">The data to write the the client.</param>
         public void WriteLine(string data)
         {
-            socket.Send(encoding.GetBytes(data + EOL));
+            this.socket.Send(this.encoding.GetBytes(data + EOL));
         }
 
         /// <summary>
@@ -224,20 +208,19 @@ namespace netDumbster.smtp
         private string ReadBuffer()
         {
             // If the buffer has data, check for a full line.
-            if (inputBuffer.Length > 0)
+            if (this.inputBuffer.Length > 0)
             {
-                string buffer = inputBuffer.ToString();
+                string buffer = this.inputBuffer.ToString();
                 int eolIndex = buffer.IndexOf(EOL);
                 if (eolIndex != -1)
                 {
                     string output = buffer.Substring(0, eolIndex);
-                    inputBuffer = new StringBuilder(buffer.Substring(eolIndex + 2));
+                    this.inputBuffer = new StringBuilder(buffer.Substring(eolIndex + 2));
                     return output;
                 }
             }
+
             return null;
         }
-
-        #endregion Methods
     }
 }

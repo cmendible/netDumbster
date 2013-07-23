@@ -1,10 +1,6 @@
-﻿#region Header
-
-// Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
+﻿// Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
 // All rights reserved.
 // Modified by Carlos Mendible
-
-#endregion Header
 
 namespace netDumbster.smtp
 {
@@ -24,13 +20,11 @@ namespace netDumbster.smtp
     /// class provides an implementation of the RFC821 specification.
     /// </summary>
     /// <remarks>
-    /// 	Created by: Eric Daugherty
-    /// 	Modified by: Carlos Mendible
+    ///     Created by: Eric Daugherty
+    ///     Modified by: Carlos Mendible
     /// </remarks>
     public class SmtpProcessor
     {
-        #region Fields
-
         /// <summary>DATA Comand</summary>
         public const int COMMAND_DATA = 6;
 
@@ -90,10 +84,6 @@ namespace netDumbster.smtp
         /// <summary>The message to display to the client when they first connect.</summary>
         private string welcomeMessage;
 
-        #endregion Fields
-
-        #region Constructors
-
         /// <summary>
         /// Initializes the SMTPProcessor with the appropriate
         /// interface implementations.  This allows the relay and
@@ -108,18 +98,10 @@ namespace netDumbster.smtp
         public SmtpProcessor(string domain, ConcurrentBag<SmtpMessage> smtpMessageStore)
         {
             this.smtpMessageStore = smtpMessageStore;
-            Initialize(domain);
+            this.Initialize(domain);
         }
 
-        #endregion Constructors
-
-        #region Events
-
         public event EventHandler<MessageReceivedArgs> MessageReceived;
-
-        #endregion Events
-
-        #region Properties
 
         /// <summary>
         /// The response to the HELO command.  This response should
@@ -130,11 +112,12 @@ namespace netDumbster.smtp
         {
             get
             {
-                return heloResponse;
+                return this.heloResponse;
             }
+
             set
             {
-                heloResponse = String.Format(value, domain);
+                this.heloResponse = string.Format(value, this.domain);
             }
         }
 
@@ -147,17 +130,14 @@ namespace netDumbster.smtp
         {
             get
             {
-                return welcomeMessage;
+                return this.welcomeMessage;
             }
+
             set
             {
-                welcomeMessage = String.Format(value, domain);
+                this.welcomeMessage = string.Format(value, this.domain);
             }
         }
-
-        #endregion Properties
-
-        #region Methods
 
         /// <summary>
         /// ProcessConnection handles a connected TCP Client
@@ -167,13 +147,13 @@ namespace netDumbster.smtp
         /// </summary>
         public void ProcessConnection(Socket socket)
         {
-            context = new SmtpContext(socket);
-            log.Debug("Sending welcome message.");
-            SendWelcomeMessage(context);
-            log.Debug("Welcome message sent.");
-            log.Debug("Processing Commands.");
-            ProcessCommands(context);
-            log.Debug("Done processing Commands.");
+            this.context = new SmtpContext(socket);
+            this.log.Debug("Sending welcome message.");
+            this.SendWelcomeMessage(this.context);
+            this.log.Debug("Welcome message sent.");
+            this.log.Debug("Processing Commands.");
+            this.ProcessCommands(this.context);
+            this.log.Debug("Done processing Commands.");
         }
 
         /// <summary>
@@ -181,18 +161,18 @@ namespace netDumbster.smtp
         /// </summary>
         public void Stop()
         {
-            if (context == null)
+            if (this.context == null)
             {
                 return;
             }
 
-            log.Debug("trying to stop processor.");
-            log.Debug("Shutting down Socket.");
-            context.Socket.Shutdown(SocketShutdown.Both);
-            log.Debug("Socket Shutdown.");
-            log.Debug("Closing Socket.");
-            context.Socket.Close();
-            log.Debug("Socket Closed.");
+            this.log.Debug("trying to stop processor.");
+            this.log.Debug("Shutting down Socket.");
+            this.context.Socket.Shutdown(SocketShutdown.Both);
+            this.log.Debug("Socket Shutdown.");
+            this.log.Debug("Closing Socket.");
+            this.context.Socket.Close();
+            this.log.Debug("Socket Closed.");
         }
 
         private void Data(SmtpContext context)
@@ -203,7 +183,7 @@ namespace netDumbster.smtp
 
             IPEndPoint clientEndPoint = (IPEndPoint)context.Socket.RemoteEndPoint;
             StringBuilder header = new StringBuilder();
-            header.Append(String.Format("Received: from ({0} [{1}])", context.ClientDomain, clientEndPoint.Address));
+            header.Append(string.Format("Received: from ({0} [{1}])", context.ClientDomain, clientEndPoint.Address));
             header.Append("\r\n");
             header.Append("     " + System.DateTime.Now);
             header.Append("\r\n");
@@ -212,7 +192,7 @@ namespace netDumbster.smtp
 
             header.Length = 0;
 
-            String line = context.ReadLine();
+            string line = context.ReadLine();
             while (!line.Equals("."))
             {
                 rawSmtpMessage.Data.Append(line);
@@ -221,16 +201,17 @@ namespace netDumbster.smtp
             }
 
             // Spool the message
-            lock (smtpMessageStore)
+            lock (this.smtpMessageStore)
             {
                 SmtpMessage smtpMessage = new SmtpMessage(rawSmtpMessage);
                 if (this.smtpMessageStore != null)
                 {
-                    smtpMessageStore.Add(smtpMessage);
+                    this.smtpMessageStore.Add(smtpMessage);
                 }
-                if(MessageReceived != null)
+
+                if (this.MessageReceived != null)
                 {
-                    MessageReceived(this, new MessageReceivedArgs(smtpMessage));
+                    this.MessageReceived(this, new MessageReceivedArgs(smtpMessage));
                 }
             }
 
@@ -243,7 +224,7 @@ namespace netDumbster.smtp
         /// <summary>
         /// Handles the HELO command.
         /// </summary>
-        private void Helo(SmtpContext context, String[] inputs)
+        private void Helo(SmtpContext context, string[] inputs)
         {
             if (context.LastCommand == -1)
             {
@@ -251,7 +232,7 @@ namespace netDumbster.smtp
                 {
                     context.ClientDomain = inputs[1];
                     context.LastCommand = COMMAND_HELO;
-                    context.WriteLine(HeloResponse);
+                    context.WriteLine(this.HeloResponse);
                 }
                 else
                 {
@@ -272,8 +253,8 @@ namespace netDumbster.smtp
             this.domain = domain;
 
             // Initialize default messages
-            welcomeMessage = String.Format(MESSAGE_DEFAULT_WELCOME, domain);
-            heloResponse = String.Format(MESSAGE_DEFAULT_HELO_RESPONSE, domain);
+            this.welcomeMessage = string.Format(MESSAGE_DEFAULT_WELCOME, domain);
+            this.heloResponse = string.Format(MESSAGE_DEFAULT_HELO_RESPONSE, domain);
         }
 
         /// <summary>
@@ -284,13 +265,13 @@ namespace netDumbster.smtp
             bool addressValid = false;
             if (context.LastCommand == COMMAND_HELO)
             {
-                string address = ParseAddress(argument);
+                string address = this.ParseAddress(argument);
                 if (address != null)
                 {
                     try
                     {
-                        //EmailAddress emailAddress = new EmailAddress(address);
-                        //context.Message.FromAddress = emailAddress;
+                        // EmailAddress emailAddress = new EmailAddress(address);
+                        // context.Message.FromAddress = emailAddress;
                         context.LastCommand = COMMAND_MAIL;
                         addressValid = true;
                         context.WriteLine(MESSAGE_OK);
@@ -327,11 +308,13 @@ namespace netDumbster.smtp
 
                 // Trim off the :< chars
                 matchText = matchText.Remove(0, 1);
+
                 // trim off the . char.
                 matchText = matchText.Remove(matchText.Length - 1, 1);
 
                 return matchText;
             }
+
             return null;
         }
 
@@ -342,7 +325,7 @@ namespace netDumbster.smtp
         private void ProcessCommands(SmtpContext context)
         {
             bool isRunning = true;
-            String inputLine;
+            string inputLine;
 
             // Loop until the client quits.
             while (isRunning)
@@ -358,15 +341,15 @@ namespace netDumbster.smtp
                         continue;
                     }
 
-                    String[] inputs = inputLine.Split(" ".ToCharArray());
+                    string[] inputs = inputLine.Split(" ".ToCharArray());
 
                     switch (inputs[0].ToLower())
                     {
                     case "helo":
-                        Helo(context, inputs);
+                        this.Helo(context, inputs);
                         break;
                     case "rset":
-                        Rset(context);
+                        this.Rset(context);
                         break;
                     case "noop":
                         context.WriteLine(MESSAGE_OK);
@@ -379,21 +362,23 @@ namespace netDumbster.smtp
                     case "mail":
                         if (inputs[1].ToLower().StartsWith("from"))
                         {
-                            Mail(context, inputLine.Substring(inputLine.IndexOf(" ")));
+                            this.Mail(context, inputLine.Substring(inputLine.IndexOf(" ")));
                             break;
                         }
+
                         context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
                         break;
                     case "rcpt":
                         if (inputs[1].ToLower().StartsWith("to"))
                         {
-                            Rcpt(context, inputLine.Substring(inputLine.IndexOf(" ")));
+                            this.Rcpt(context, inputLine.Substring(inputLine.IndexOf(" ")));
                             break;
                         }
+
                         context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
                         break;
                     case "data":
-                        Data(context);
+                        this.Data(context);
                         break;
                     default:
                         context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
@@ -408,7 +393,8 @@ namespace netDumbster.smtp
                     {
                         context.WriteLine(MESSAGE_GOODBYE);
                     }
-                    //else
+
+                    // else
                     //    context.WriteLine(MESSAGE_SYSTEM_ERROR);
 
                     isRunning = false;
@@ -424,7 +410,7 @@ namespace netDumbster.smtp
         {
             if (context.LastCommand == COMMAND_MAIL || context.LastCommand == COMMAND_RCPT)
             {
-                string address = ParseAddress(argument);
+                string address = this.ParseAddress(argument);
                 if (address != null)
                 {
                     try
@@ -472,9 +458,7 @@ namespace netDumbster.smtp
         /// </summary>
         private void SendWelcomeMessage(SmtpContext context)
         {
-            context.WriteLine(WelcomeMessage);
+            context.WriteLine(this.WelcomeMessage);
         }
-
-        #endregion Methods
     }
 }

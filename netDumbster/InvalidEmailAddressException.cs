@@ -1,10 +1,6 @@
-#region Header
-
 // Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
 // All rights reserved.
 // Modified by Carlos Mendible
-
-#endregion Header
 
 namespace netDumbster.smtp
 {
@@ -19,8 +15,6 @@ namespace netDumbster.smtp
     /// </remarks>
     public class InvalidEmailAddressException : ApplicationException
     {
-        #region Constructors
-
         /// <summary>
         /// Creates a new Exception with a user-displayable message.
         /// </summary>
@@ -28,7 +22,5 @@ namespace netDumbster.smtp
         : base(userMessage)
         {
         }
-
-        #endregion Constructors
     }
 }

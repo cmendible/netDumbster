@@ -1,10 +1,6 @@
-#region Header
-
-// Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
+﻿// Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
 // All rights reserved.
 // Modified by Carlos Mendible
-
-#endregion Header
 
 namespace netDumbster.smtp
 {
@@ -12,25 +8,19 @@ namespace netDumbster.smtp
     using System.Collections;
     using System.Collections.Specialized;
     using System.Linq;
+    using System.Net;
     using System.Net.Mail;
     using System.Text;
     using System.Text.RegularExpressions;
-    using System.Net;
 
     /// <summary>
     /// Stores an incoming SMTP Message.
     /// </summary>
     public class SmtpMessage
     {
-        #region Fields
-
         private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
 
         private RawSmtpMessage rawSmtpMessage;
-
-        #endregion Fields
-
-        #region Constructors
 
         /// <summary>
         /// Creates a new message.
@@ -50,10 +40,6 @@ namespace netDumbster.smtp
                 this.RemotePort = rawSmtpMessage.RemotePort;
             }
         }
-
-        #endregion Constructors
-
-        #region Properties
 
         /// <summary>Message data.</summary>
         public string Data
@@ -91,13 +77,31 @@ namespace netDumbster.smtp
             {
                 if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("importance"))
                 {
-                    return Headers["importance"].ToString();
+                    return this.Headers["importance"].ToString();
                 }
                 else
                 {
                     return string.Empty;
                 }
             }
+        }
+
+        /// <summary>
+        /// Gets the local IP address.
+        /// </summary>
+        public IPAddress LocalIPAddress
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Gets the local port.
+        /// </summary>
+        public int LocalPort
+        {
+            get;
+            private set;
         }
 
         /// <summary>
@@ -116,32 +120,7 @@ namespace netDumbster.smtp
             {
                 if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("priority"))
                 {
-                    return Headers["priority"].ToString();
-                }
-                else
-                {
-                    return string.Empty;
-                }
-            }
-        }
-
-        /// <summary>
-        /// The addresses that this message will be
-        /// delivered to.
-        /// </summary>
-        public EmailAddress[] ToAddresses
-        {
-            get;
-            private set;
-        }
-
-        public string XPriority
-        {
-            get
-            {
-                if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("x-priority"))
-                {
-                    return Headers["x-priority"].ToString();
+                    return this.Headers["priority"].ToString();
                 }
                 else
                 {
@@ -160,15 +139,6 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
-        /// Gets the local IP address.
-        /// </summary>
-        public IPAddress LocalIPAddress
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
         /// Gets the remote port.
         /// </summary>
         public int RemotePort
@@ -178,14 +148,28 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
-        /// Gets the local port.
+        /// The addresses that this message will be
+        /// delivered to.
         /// </summary>
-        public int LocalPort
+        public EmailAddress[] ToAddresses
         {
             get;
             private set;
         }
 
-        #endregion Properties
+        public string XPriority
+        {
+            get
+            {
+                if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("x-priority"))
+                {
+                    return this.Headers["x-priority"].ToString();
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }
+        }
     }
 }

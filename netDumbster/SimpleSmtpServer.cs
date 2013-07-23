@@ -1,9 +1,5 @@
-#region Header
-
-// Copyright (c) 2010, Hexasystems Corporation
+﻿// Copyright (c) 2010, Hexasystems Corporation
 // All rights reserved.
-
-#endregion Header
 
 namespace netDumbster.smtp
 {
@@ -20,8 +16,6 @@ namespace netDumbster.smtp
     /// </summary>
     public class SimpleSmtpServer
     {
-        #region Fields
-
         /// <summary>
         /// Logger
         /// </summary>
@@ -42,16 +36,12 @@ namespace netDumbster.smtp
         /// </summary>
         private TcpListener tcpListener;
 
-        #endregion Fields
-
-        #region Constructors
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SimpleSmtpServer"/> class.
         /// </summary>
         /// <param name="port">The port.</param>
-        private SimpleSmtpServer(int port) 
-            : this(port, true)
+        private SimpleSmtpServer(int port)
+        : this(port, true)
         {
         }
 
@@ -64,19 +54,11 @@ namespace netDumbster.smtp
         {
             this.UseMessageStore = useMessageStore;
             this.stop = false;
-            Port = port;
-            ServerReady = new AutoResetEvent(false);
+            this.Port = port;
+            this.ServerReady = new AutoResetEvent(false);
         }
 
-        #endregion Constructors
-
-        #region Events
-
         public event EventHandler<MessageReceivedArgs> MessageReceived;
-
-        #endregion Events
-
-        #region Properties
 
         /// <summary>
         /// Gets or sets the port.
@@ -118,15 +100,23 @@ namespace netDumbster.smtp
             }
         }
 
+        /// <summary>
+        /// Gets a value indicating whether [use message store].
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [use message store]; otherwise, <c>false</c>.
+        /// </value>
+        public bool UseMessageStore
+        {
+            get;
+            private set;
+        }
+
         internal AutoResetEvent ServerReady
         {
             get;
             set;
         }
-
-        #endregion Properties
-
-        #region Methods
 
         /// <summary>
         /// Gets the random unused port.
@@ -214,33 +204,34 @@ namespace netDumbster.smtp
         /// </summary>
         public void Stop()
         {
-            log.Debug("Trying to stop SmtpServer.");
+            this.log.Debug("Trying to stop SmtpServer.");
 
             try
             {
-                lock(this)
+                lock (this)
                 {
                     this.stop = true;
 
                     // Kick the server accept loop
-                    if (tcpListener != null)
+                    if (this.tcpListener != null)
                     {
-                        //_processor.Stop();
-                        log.Debug("Stopping tcp listener.");
-                        tcpListener.Stop();
-                        log.Debug("Tcp listener stopped.");
+                        // _processor.Stop();
+                        this.log.Debug("Stopping tcp listener.");
+                        this.tcpListener.Stop();
+                        this.log.Debug("Tcp listener stopped.");
                     }
-                    tcpListener = null;
+
+                    this.tcpListener = null;
                 }
             }
             catch (Exception ex)
             {
-                log.Warn("Unexpected Exception stopping SmtpServer", ex);
+                this.log.Warn("Unexpected Exception stopping SmtpServer", ex);
             }
             finally
             {
-                log.Debug("SmtpServer Stopped.");
-                ServerReady.Close();
+                this.log.Debug("SmtpServer Stopped.");
+                this.ServerReady.Close();
             }
         }
 
@@ -249,40 +240,29 @@ namespace netDumbster.smtp
         /// </summary>
         internal void StartListening()
         {
-            log.Info("Starting Smtp server");
+            this.log.Info("Starting Smtp server");
 
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, Port);
-            tcpListener = new TcpListener(endPoint);
+            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, this.Port);
+            this.tcpListener = new TcpListener(endPoint);
+
             // Fix the problem with the scenario if the server is stopped, and then
             // restarted with the same port, it will not throw an error.
-            tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            tcpListener.Start();
+            this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            this.tcpListener.Start();
 
-            log.DebugFormat("Started Tcp Listener at port {0}", Port);
+            this.log.DebugFormat("Started Tcp Listener at port {0}", this.Port);
 
             try
             {
-                log.Debug("Calling BeginAcceptSocket.");
-                tcpListener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), tcpListener);
-                log.Debug("BeginAcceptSocket called.");
-                ServerReady.Set();
+                this.log.Debug("Calling BeginAcceptSocket.");
+                this.tcpListener.BeginAcceptSocket(new AsyncCallback(this._SocketHandler), this.tcpListener);
+                this.log.Debug("BeginAcceptSocket called.");
+                this.ServerReady.Set();
             }
             catch (Exception ex)
             {
-                log.Warn("Unexpected Exception starting the SmtpServer.", ex);
+                this.log.Warn("Unexpected Exception starting the SmtpServer.", ex);
             }
-        }
-
-        /// <summary>
-        /// Gets a value indicating whether [use message store].
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> if [use message store]; otherwise, <c>false</c>.
-        /// </value>
-        public bool UseMessageStore
-        {
-            get;
-            private set;
         }
 
         /// <summary>
@@ -296,18 +276,18 @@ namespace netDumbster.smtp
                 return;
             }
 
-            log.Debug("Entering Socket Handler.");
+            this.log.Debug("Entering Socket Handler.");
 
             try
             {
                 TcpListener listener = (TcpListener)result.AsyncState;
-                listener.BeginAcceptSocket(new AsyncCallback(_SocketHandler), listener);
+                listener.BeginAcceptSocket(new AsyncCallback(this._SocketHandler), listener);
 
-                log.Debug("Calling EndAcceptSocket.");
+                this.log.Debug("Calling EndAcceptSocket.");
 
                 using (Socket socket = listener.EndAcceptSocket(result))
                 {
-                    log.Debug("Socket accepted and ready to be processed.");
+                    this.log.Debug("Socket accepted and ready to be processed.");
                     SmtpProcessor processor = new SmtpProcessor(string.Empty, this.UseMessageStore ? this.smtpMessageStore : null);
                     processor.MessageReceived += (sender, args) =>
                     {
@@ -321,14 +301,12 @@ namespace netDumbster.smtp
             }
             catch (ObjectDisposedException ex)
             {
-                log.Warn("Object Disposed Exception. THIS IS EXPECTED ONLY IF SERVER WAS STOPPED.", ex);
+                this.log.Warn("Object Disposed Exception. THIS IS EXPECTED ONLY IF SERVER WAS STOPPED.", ex);
             }
             catch (SocketException ex)
             {
-                log.Warn("Socket Exception", ex);
+                this.log.Warn("Socket Exception", ex);
             }
         }
-
-        #endregion Methods
     }
 }

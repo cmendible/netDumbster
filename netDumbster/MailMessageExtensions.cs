@@ -1,9 +1,5 @@
-﻿#region Header
-
-// Copyright (c) 2010, Hexasystems Corporation
+﻿// Copyright (c) 2010, Hexasystems Corporation
 // All rights reserved.
-
-#endregion Header
 
 namespace netDumbster.smtp
 {
@@ -13,8 +9,6 @@ namespace netDumbster.smtp
 
     public static class MailMessageExtensions
     {
-        #region Methods
-
         public static SmtpMessagePart[] Parts(this MailMessage mailMessage)
         {
             List<SmtpMessagePart> parts = new List<SmtpMessagePart>();
@@ -45,7 +39,5 @@ namespace netDumbster.smtp
             var reader = new StreamReader(stream);
             return reader.ReadToEnd();
         }
-
-        #endregion Methods
     }
 }

@@ -4,123 +4,113 @@
 
     public class ConsoleLogger : ILog
     {
-        #region Fields
-
         private const string layout = "{0} - {1} - {2} - {3}";
 
         private string type;
-
-        #endregion Fields
-
-        #region Constructors
 
         public ConsoleLogger(Type type)
         {
             this.type = type.FullName;
         }
 
-        #endregion Constructors
-
-        #region Methods
-
         public void Debug(object message)
         {
-            WriteToConsole("DEBUG", message);
+            this.WriteToConsole("DEBUG", message);
         }
 
         public void Debug(object message, Exception exception)
         {
-            WriteToConsole("DEBUG", message, exception);
+            this.WriteToConsole("DEBUG", message, exception);
         }
 
         public void DebugFormat(string format, params object[] args)
         {
-            WriteToConsole("DEBUG", format, args);
+            this.WriteToConsole("DEBUG", format, args);
         }
 
         public void DebugFormat(IFormatProvider provider, string format, params object[] args)
         {
-            WriteToConsole("DEBUG", provider, format, args);
+            this.WriteToConsole("DEBUG", provider, format, args);
         }
 
         public void Error(object message)
         {
-            WriteToConsole("ERROR", message);
+            this.WriteToConsole("ERROR", message);
         }
 
         public void Error(object message, Exception exception)
         {
-            WriteToConsole("ERROR", message, exception);
+            this.WriteToConsole("ERROR", message, exception);
         }
 
         public void ErrorFormat(string format, params object[] args)
         {
-            WriteToConsole("ERROR", format, args);
+            this.WriteToConsole("ERROR", format, args);
         }
 
         public void ErrorFormat(IFormatProvider provider, string format, params object[] args)
         {
-            WriteToConsole("ERROR", provider, format, args);
+            this.WriteToConsole("ERROR", provider, format, args);
         }
 
         public void Fatal(object message)
         {
-            WriteToConsole("FATAL", message);
+            this.WriteToConsole("FATAL", message);
         }
 
         public void Fatal(object message, Exception exception)
         {
-            WriteToConsole("FATAL", message, exception);
+            this.WriteToConsole("FATAL", message, exception);
         }
 
         public void FatalFormat(string format, params object[] args)
         {
-            WriteToConsole("FATAL", format, args);
+            this.WriteToConsole("FATAL", format, args);
         }
 
         public void FatalFormat(IFormatProvider provider, string format, params object[] args)
         {
-            WriteToConsole("FATAL", provider, format, args);
+            this.WriteToConsole("FATAL", provider, format, args);
         }
 
         public void Info(object message)
         {
-            WriteToConsole("INFO", message);
+            this.WriteToConsole("INFO", message);
         }
 
         public void Info(object message, Exception exception)
         {
-            WriteToConsole("INFO", message, exception);
+            this.WriteToConsole("INFO", message, exception);
         }
 
         public void InfoFormat(string format, params object[] args)
         {
-            WriteToConsole("INFO", format, args);
+            this.WriteToConsole("INFO", format, args);
         }
 
         public void InfoFormat(IFormatProvider provider, string format, params object[] args)
         {
-            WriteToConsole("INFO", provider, format, args);
+            this.WriteToConsole("INFO", provider, format, args);
         }
 
         public void Warn(object message)
         {
-            WriteToConsole("WARNING", message);
+            this.WriteToConsole("WARNING", message);
         }
 
         public void Warn(object message, Exception exception)
         {
-            WriteToConsole("WARNING", message, exception);
+            this.WriteToConsole("WARNING", message, exception);
         }
 
         public void WarnFormat(string format, params object[] args)
         {
-            WriteToConsole("WARNING", format, args);
+            this.WriteToConsole("WARNING", format, args);
         }
 
         public void WarnFormat(IFormatProvider provider, string format, params object[] args)
         {
-            WriteToConsole("WARNING", provider, format, args);
+            this.WriteToConsole("WARNING", provider, format, args);
         }
 
         private static string CurrentDateTime()
@@ -147,7 +137,5 @@
         {
             Console.WriteLine(string.Format(layout, CurrentDateTime(), level, this.type, string.Format(provider, format, args)));
         }
-
-        #endregion Methods
     }
 }

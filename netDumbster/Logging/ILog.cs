@@ -4,8 +4,6 @@
 
     public interface ILog
     {
-        #region Methods
-
         void Debug(object message);
 
         void Debug(object message, Exception exception);
@@ -45,7 +43,5 @@
         void WarnFormat(string format, params object[] args);
 
         void WarnFormat(IFormatProvider provider, string format, params object[] args);
-
-        #endregion Methods
     }
 }

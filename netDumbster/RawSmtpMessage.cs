@@ -1,18 +1,15 @@
-﻿#region Header
-
-// Copyright (c) 2010, Hexasystems Corporation
+﻿// Copyright (c) 2010, Hexasystems Corporation
 // All rights reserved.
-
-#endregion Header
 
 namespace netDumbster.smtp
 {
     using System;
     using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
-    using netDumbster.smtp;
     using System.Net;
+    using System.Text;
+
+    using netDumbster.smtp;
 
     public class RawSmtpMessage
     {
@@ -27,30 +24,8 @@ namespace netDumbster.smtp
             this.RemoteIPAddress = remoteIPAddress;
             this.RemotePort = remotePort;
         }
-        
+
         public StringBuilder Data
-        {
-            get;
-            private set;
-        }
-
-        public IEnumerable<EmailAddress> Recipients
-        {
-            get
-            {
-                return this.recipients;
-            }
-        }
-
-        public void AddRecipient(EmailAddress recipient)
-        {
-            this.recipients.Add(recipient);
-        }
-
-        /// <summary>
-        /// Gets the remote IP address.
-        /// </summary>
-        public IPAddress RemoteIPAddress
         {
             get;
             private set;
@@ -66,6 +41,32 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
+        /// Gets the local port.
+        /// </summary>
+        public int LocalPort
+        {
+            get;
+            private set;
+        }
+
+        public IEnumerable<EmailAddress> Recipients
+        {
+            get
+            {
+                return this.recipients;
+            }
+        }
+
+        /// <summary>
+        /// Gets the remote IP address.
+        /// </summary>
+        public IPAddress RemoteIPAddress
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
         /// Gets the remote port.
         /// </summary>
         public int RemotePort
@@ -74,13 +75,9 @@ namespace netDumbster.smtp
             private set;
         }
 
-        /// <summary>
-        /// Gets the local port.
-        /// </summary>
-        public int LocalPort
+        public void AddRecipient(EmailAddress recipient)
         {
-            get;
-            private set;
+            this.recipients.Add(recipient);
         }
     }
 }

@@ -1,10 +1,6 @@
-#region Header
-
-// Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
+﻿// Copyright (c) 2003, Eric Daugherty (http://www.ericdaugherty.com)
 // All rights reserved.
 // Modified by Carlos Mendible
-
-#endregion Header
 
 namespace netDumbster.smtp
 {
@@ -18,27 +14,17 @@ namespace netDumbster.smtp
     /// </summary>
     public class SmtpMessagePart
     {
-        #region Fields
-
         private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
 
-        private string bodyData = String.Empty;
-        private string headerData = String.Empty;
+        private string bodyData = string.Empty;
+        private string headerData = string.Empty;
         private NameValueCollection headerFields = null;
-
-        #endregion Fields
-
-        #region Constructors
 
         public SmtpMessagePart(string header, string body)
         {
-            headerData = header;
-            bodyData = body;
+            this.headerData = header;
+            this.bodyData = body;
         }
-
-        #endregion Constructors
-
-        #region Properties
 
         /// <summary>
         /// The raw text that represents the actual mime part.
@@ -47,7 +33,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                return bodyData;
+                return this.bodyData;
             }
         }
 
@@ -58,7 +44,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                return headerData;
+                return this.headerData;
             }
         }
 
@@ -71,14 +57,13 @@ namespace netDumbster.smtp
         {
             get
             {
-                if( headerFields == null )
+                if (this. headerFields == null)
                 {
-                    //headerFields = SmtpMessage.ParseHeaders( headerData );
+                    // headerFields = SmtpMessage.ParseHeaders( headerData );
                 }
-                return headerFields;
+
+                return this.headerFields;
             }
         }
-
-        #endregion Properties
     }
 }
