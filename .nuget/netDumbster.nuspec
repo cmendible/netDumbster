@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata >
     <id>netDumbster</id>
-    <version>1.4.0.0-beta</version>
+    <version>1.4.0.0-beta1</version>
     <authors>HexaSystems Inc.</authors>
 	<owners>HexaSystems Inc.</owners>
 	<dependencies>
@@ -18,8 +18,8 @@
     <tags>SMTP Tools UnitTest Fake</tags>
   </metadata>
   <files>
-     <file src="..\netDumbster\bin\Release\netDumbster.dll" target="lib" />
-     <file src="..\netDumbster\bin\Release\netDumbster.pdb" target="lib" />
-     <file src="..\netDumbster\bin\Release\netDumbster.xml" target="lib" />
+     <file src="..\netDumbster\bin\Release\netDumbster.dll" target="lib\net40" />
+     <file src="..\netDumbster\bin\Release\netDumbster.pdb" target="lib\net40" />
+     <file src="..\netDumbster\bin\Release\netDumbster.xml" target="lib\net40" />
   </files>
 </package>
