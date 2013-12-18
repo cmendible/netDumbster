@@ -181,13 +181,26 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
-        /// Starts the server on loopback adapter interface using specified port.
+        /// Starts this instance. on loopback adapter interface
         /// </summary>
         /// <param name="port">The port.</param>
         /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
         /// <returns></returns>
-        public static SimpleSmtpServer StartOnLoopbackOnly(int port, bool useMessageStore)
+        public static SimpleSmtpServer StartOnLoopbackOnly()
         {
+            int port = GetRandomUnusedPort();
+            return Start(port, true, server => server.StartListeningOnLoopbackAdapter());
+        }
+
+        /// <summary>
+        /// Starts the specified use message store. on loopback adapter interface
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer StartOnLoopbackOnly(bool useMessageStore)
+        {
+            int port = GetRandomUnusedPort();
             return Start(port, useMessageStore, server => server.StartListeningOnLoopbackAdapter());
         }
 
@@ -200,6 +213,17 @@ namespace netDumbster.smtp
         public static SimpleSmtpServer StartOnLoopbackOnly(int port)
         {
             return Start(port, true, server => server.StartListeningOnLoopbackAdapter());
+        }
+
+        /// <summary>
+        /// Starts the server on loopback adapter interface using specified port.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer StartOnLoopbackOnly(int port, bool useMessageStore)
+        {
+            return Start(port, useMessageStore, server => server.StartListeningOnLoopbackAdapter());
         }
 
         private static SimpleSmtpServer Start(int port, bool useMessageStore, Action<SimpleSmtpServer> action)
