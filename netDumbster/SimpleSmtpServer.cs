@@ -14,7 +14,7 @@ namespace netDumbster.smtp
     /// <summary>
     /// Simple Smtp Server
     /// </summary>
-    public class SimpleSmtpServer
+    public class SimpleSmtpServer:IDisposable
     {
         /// <summary>
         /// Logger
@@ -307,6 +307,11 @@ namespace netDumbster.smtp
             {
                 this.log.Warn("Socket Exception", ex);
             }
+        }
+
+        public void Dispose()
+        {
+            Stop();
         }
     }
 }
