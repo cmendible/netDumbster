@@ -177,8 +177,59 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port, bool useMessageStore)
         {
+            return Start(port, useMessageStore, server => server.StartListeningOnAnyInterface());
+        }
+
+        /// <summary>
+        /// Starts this instance. on loopback adapter interface
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer StartOnLoopbackOnly()
+        {
+            int port = GetRandomUnusedPort();
+            return Start(port, true, server => server.StartListeningOnLoopbackAdapter());
+        }
+
+        /// <summary>
+        /// Starts the specified use message store. on loopback adapter interface
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer StartOnLoopbackOnly(bool useMessageStore)
+        {
+            int port = GetRandomUnusedPort();
+            return Start(port, useMessageStore, server => server.StartListeningOnLoopbackAdapter());
+        }
+
+        /// <summary>
+        /// Starts the server on loopback adapter interface using specified port.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer StartOnLoopbackOnly(int port)
+        {
+            return Start(port, true, server => server.StartListeningOnLoopbackAdapter());
+        }
+
+        /// <summary>
+        /// Starts the server on loopback adapter interface using specified port.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer StartOnLoopbackOnly(int port, bool useMessageStore)
+        {
+            return Start(port, useMessageStore, server => server.StartListeningOnLoopbackAdapter());
+        }
+
+        private static SimpleSmtpServer Start(int port, bool useMessageStore, Action<SimpleSmtpServer> action)
+        {
             var server = new SimpleSmtpServer(port, useMessageStore);
-            new Thread(new ThreadStart(server.StartListening)).Start();
+            new Thread(new ThreadStart(()=>action(server))).Start();
             server.ServerReady.WaitOne();
             return server;
         }
@@ -236,13 +287,29 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
+        /// Starts the Server on loopback adapter
+        /// </summary>
+        internal void StartListeningOnLoopbackAdapter()
+        {
+            this.StartListening(IPAddress.Loopback);
+        }
+
+        /// <summary>
         /// Starts the Server
         /// </summary>
-        internal void StartListening()
+        internal void StartListeningOnAnyInterface()
+        {
+            this.StartListening(IPAddress.Any);
+        }
+
+        /// <summary>
+        /// Starts the Server
+        /// </summary>
+        private void StartListening(IPAddress onAddress)
         {
             this.log.Info("Starting Smtp server");
 
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, this.Port);
+            IPEndPoint endPoint = new IPEndPoint(onAddress, this.Port);
             this.tcpListener = new TcpListener(endPoint);
 
             // Fix the problem with the scenario if the server is stopped, and then
@@ -264,6 +331,7 @@ namespace netDumbster.smtp
                 this.log.Warn("Unexpected Exception starting the SmtpServer.", ex);
             }
         }
+
 
         /// <summary>
         /// Async Socket handler.
