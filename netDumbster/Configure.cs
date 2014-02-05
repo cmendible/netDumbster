@@ -70,7 +70,12 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public SimpleSmtpServer Build()
         {
-            return SimpleSmtpServer.Start(this);
+            Configuration config = this;
+            if (this.Port == 0)
+            {
+                config = this.WithRandomPort();
+            }
+            return SimpleSmtpServer.Start(config);
         }
 
         /// <summary>

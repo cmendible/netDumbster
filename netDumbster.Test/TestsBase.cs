@@ -92,7 +92,7 @@ namespace netDumbster.Test
         [Test]
         public void Send_Email_With_AlternateViews()
         {
-            using (var client = new SmtpClient("localhost", this.server.Port))
+            using (var client = new SmtpClient("localhost", this.server.Configuration.Port))
             {
                 var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
                 mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
@@ -112,7 +112,7 @@ namespace netDumbster.Test
         [Test]
         public void Send_Email_With_AlternateViews_And_Attachments()
         {
-            using (var client = new SmtpClient("localhost", this.server.Port))
+            using (var client = new SmtpClient("localhost", this.server.Configuration.Port))
             {
                 var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
                 mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
@@ -148,7 +148,7 @@ namespace netDumbster.Test
         [Test]
         public void Send_Email_With_Many_Lines()
         {
-            using (SmtpClient client = new SmtpClient("localhost", this.server.Port))
+            using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
             {
                 var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body\r\nline2\r\nline3");
                 mailMessage.IsBodyHtml = false;
@@ -162,7 +162,7 @@ namespace netDumbster.Test
         [Test]
         public void Send_Email_With_Priority()
         {
-            using (SmtpClient client = new SmtpClient("localhost", this.server.Port))
+            using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
             {
                 var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
                 mailMessage.IsBodyHtml = false;
@@ -181,7 +181,7 @@ namespace netDumbster.Test
         public void Send_Email_With_RussianText()
         {
             string body = string.Empty;
-            using (SmtpClient client = new SmtpClient("localhost", this.server.Port))
+            using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
             {
                 body = "Съешь ещё этих мягких французских булок, да выпей чаю" +
                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
@@ -264,7 +264,7 @@ namespace netDumbster.Test
         public void Start_Server_Random_Port()
         {
             SimpleSmtpServer randomPortServer = this.StartServer();
-            Assert.Greater(randomPortServer.Port, 0);
+            Assert.Greater(randomPortServer.Configuration.Port, 0);
             randomPortServer.Stop();
         }
 
@@ -280,7 +280,7 @@ namespace netDumbster.Test
 
         protected void SendMail(bool smtpAuth, bool isBodyHtml, byte[] attachment)
         {
-            this.SendMail(smtpAuth, isBodyHtml, attachment, this.server.Port);
+            this.SendMail(smtpAuth, isBodyHtml, attachment, this.server.Configuration.Port);
         }
 
         protected void SendMail(bool smtpAuth, bool isBodyHtml, byte[] attachment, int serverPort)

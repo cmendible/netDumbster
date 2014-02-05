@@ -1,11 +1,8 @@
 ﻿// Copyright (c) 2010, Hexasystems Corporation
 // All rights reserved.
-
 namespace netDumbster.Test
 {
-    using System.Net.Mail;
-    using System.Net.Mime;
-
+    using System.Net;
     using netDumbster.smtp;
     using NUnit.Framework;
 
@@ -14,12 +11,17 @@ namespace netDumbster.Test
     {
         protected override SimpleSmtpServer StartServer()
         {
-            return SimpleSmtpServer.StartOnLoopbackOnly();
+            return Configuration.Configure()
+                .WithAddress(IPAddress.Loopback)
+                .Build();
         }
 
         protected override SimpleSmtpServer StartServer(int port)
         {
-            return SimpleSmtpServer.StartOnLoopbackOnly(port);
+            return Configuration.Configure()
+                .WithAddress(IPAddress.Loopback)
+                .WithPort(port)
+                .Build();
         }
 
     }
