@@ -51,21 +51,26 @@ namespace netDumbster.smtp
         /// <param name="port">The port.</param>
         /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
         private SimpleSmtpServer(int port, bool useMessageStore)
+            : this(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore))
+        {   
+        }
+
+        private SimpleSmtpServer(Configuration configuration)
         {
-            this.UseMessageStore = useMessageStore;
-            this.stop = false;
-            this.Port = port;
+            this.Configuration = configuration;
             this.ServerReady = new AutoResetEvent(false);
         }
 
         public event EventHandler<MessageReceivedArgs> MessageReceived;
 
         /// <summary>
-        /// Gets or sets the port.
+        /// Gets the configuration.
         /// </summary>
-        /// <value>The port.</value>
-        public int Port
-        {
+        /// <value>
+        /// The configuration.
+        /// </value>
+        public Configuration Configuration
+        { 
             get;
             private set;
         }
@@ -100,42 +105,10 @@ namespace netDumbster.smtp
             }
         }
 
-        /// <summary>
-        /// Gets a value indicating whether [use message store].
-        /// </summary>
-        /// <value>
-        ///   <c>true</c> if [use message store]; otherwise, <c>false</c>.
-        /// </value>
-        public bool UseMessageStore
-        {
-            get;
-            private set;
-        }
-
         internal AutoResetEvent ServerReady
         {
             get;
             set;
-        }
-
-        /// <summary>
-        /// Gets the random unused port.
-        /// </summary>
-        /// <returns></returns>
-        public static int GetRandomUnusedPort()
-        {
-            try
-            {
-                var listener = new TcpListener(IPAddress.Any, 0);
-                listener.Start();
-                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-                listener.Stop();
-                return port;
-            }
-            catch
-            {
-                throw;
-            }
         }
 
         /// <summary>
@@ -144,8 +117,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start()
         {
-            int port = GetRandomUnusedPort();
-            return SimpleSmtpServer.Start(port, true);
+            return SimpleSmtpServer.Start(Configuration.Configure().WithRandomPort());
         }
 
         /// <summary>
@@ -155,8 +127,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(bool useMessageStore)
         {
-            int port = GetRandomUnusedPort();
-            return SimpleSmtpServer.Start(port, useMessageStore);
+            return SimpleSmtpServer.Start(Configuration.Configure().WithRandomPort().EnableMessageStore(useMessageStore));
         }
 
         /// <summary>
@@ -166,7 +137,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port)
         {
-            return SimpleSmtpServer.Start(port, true);
+            return SimpleSmtpServer.Start(Configuration.Configure().WithPort(port));
         }
 
         /// <summary>
@@ -177,7 +148,12 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port, bool useMessageStore)
         {
-            var server = new SimpleSmtpServer(port, useMessageStore);
+            return SimpleSmtpServer.Start(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore));
+        }
+
+        internal static SimpleSmtpServer Start(Configuration configuration)
+        {
+            var server = new SimpleSmtpServer(configuration);
             new Thread(new ThreadStart(server.StartListening)).Start();
             server.ServerReady.WaitOne();
             return server;
@@ -242,7 +218,7 @@ namespace netDumbster.smtp
         {
             this.log.Info("Starting Smtp server");
 
-            IPEndPoint endPoint = new IPEndPoint(IPAddress.Any, this.Port);
+            IPEndPoint endPoint = new IPEndPoint(this.Configuration.IPAddress, this.Configuration.Port);
             this.tcpListener = new TcpListener(endPoint);
 
             // Fix the problem with the scenario if the server is stopped, and then
@@ -250,7 +226,7 @@ namespace netDumbster.smtp
             this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             this.tcpListener.Start();
 
-            this.log.DebugFormat("Started Tcp Listener at port {0}", this.Port);
+            this.log.DebugFormat("Started Tcp Listener at port {0}", this.Configuration.Port);
 
             try
             {
@@ -288,7 +264,7 @@ namespace netDumbster.smtp
                 using (Socket socket = listener.EndAcceptSocket(result))
                 {
                     this.log.Debug("Socket accepted and ready to be processed.");
-                    SmtpProcessor processor = new SmtpProcessor(string.Empty, this.UseMessageStore ? this.smtpMessageStore : null);
+                    SmtpProcessor processor = new SmtpProcessor(string.Empty, this.Configuration.UseMessageStore ? this.smtpMessageStore : null);
                     processor.MessageReceived += (sender, args) =>
                     {
                         if (MessageReceived != null)
