@@ -277,7 +277,7 @@ namespace netDumbster.Test
         {
             // Arrange
             var port = 50003;
-            var server = SimpleSmtpServer.Start(port, processingDelay);
+            var server = SimpleSmtpServer.Start(port, true, processingDelay);
 
             // Act
             var stopwatch = new Stopwatch();
