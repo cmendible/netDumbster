@@ -273,7 +273,7 @@ namespace netDumbster.Test
         [TestCase(0)]
         [TestCase(5000)]
         [TestCase(10000)]
-        public void GivenAProcessingDelay_WhenProcessingANewMessage_ThenItIsProcessedAfterTheDelayHasElapsed(int processingDelay)
+        public void Send_Email_With_Delayed_Processing(int processingDelay)
         {
             // Arrange
             var port = 50003;
