@@ -9,6 +9,7 @@ using System.Text;
 using NUnit.Framework;
 using netDumbster.smtp;
 using netDumbster.smtp.Logging;
+using System.Diagnostics;
 
 namespace netDumbster.Test
 {
@@ -267,6 +268,33 @@ namespace netDumbster.Test
             Assert.Greater(randomPortServer.Configuration.Port, 0);
             randomPortServer.Stop();
         }
+
+        [TestCase(-1)]
+        [TestCase(0)]
+        [TestCase(5000)]
+        [TestCase(10000)]
+        public void Send_Email_With_Delayed_Processing(int processingDelay)
+        {
+            // Arrange
+            var port = 50003;
+            var server = SimpleSmtpServer.Start(port, true, processingDelay);
+
+            // Act
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            SendMail(false, true, null, port);
+            stopwatch.Stop();
+
+            // Assert
+            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
+            Console.WriteLine(string.Format("Server took {0} ms to complete", elapsedMilliseconds));
+
+            Assert.That(elapsedMilliseconds, Is.GreaterThanOrEqualTo(processingDelay));
+
+            // Tidy up
+            server.Stop();
+        }
+
 
         protected void SendMail()
         {

@@ -137,7 +137,21 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port)
         {
-            return SimpleSmtpServer.Start(Configuration.Configure().WithPort(port));
+            return SimpleSmtpServer.Start(port, 0);
+        }
+
+        /// <summary>
+        /// Starts server listening to the specified port with a simulated delay when processing a new SMTP message.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="processingDelayInMilliseconds">The number of milliseconds to wait before processing a new SMTP message</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer Start(int port, int processingDelayInMilliseconds)
+        {
+            return SimpleSmtpServer.Start(Configuration.Configure()
+                                                       .WithPort(port)
+                                                       .WithProcessingDelay(processingDelayInMilliseconds)
+                                          );
         }
 
         /// <summary>
@@ -148,7 +162,19 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port, bool useMessageStore)
         {
-            return SimpleSmtpServer.Start(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore));
+            return SimpleSmtpServer.Start(port, useMessageStore, 0);
+        }
+
+        /// <summary>
+        /// Starts the specified port.
+        /// </summary>
+        /// <param name="port">The port.</param>
+        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
+        /// <param name="processingDelayInMilliseconds">The number of milliseconds to wait before processing a new SMTP message</param>
+        /// <returns></returns>
+        public static SimpleSmtpServer Start(int port, bool useMessageStore, int processingDelayInMilliseconds)
+        {
+            return SimpleSmtpServer.Start(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore).WithProcessingDelay(processingDelayInMilliseconds));
         }
 
         internal static SimpleSmtpServer Start(Configuration configuration)
@@ -253,6 +279,11 @@ namespace netDumbster.smtp
             }
 
             this.log.Debug("Entering Socket Handler.");
+
+            if (this.Configuration.ProcessingDelayInMilliseconds > 0)
+            {
+                Thread.Sleep(this.Configuration.ProcessingDelayInMilliseconds);
+            }
 
             try
             {
