@@ -1,3 +1,5 @@
+[![Build Status](https://ci.appveyor.com/api/projects/status/su9xd1ddo1bv5q4i?svg=true)]
+
 netDumbster is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)
 
 netDumbster is based on the API of nDumbster (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
@@ -8,4 +10,3 @@ Follow us:
 www.hexasystems.com
 www.twitter.com/hexasystems
 http://carlos.mendible.com
-
