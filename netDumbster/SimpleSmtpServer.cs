@@ -8,13 +8,13 @@ namespace netDumbster.smtp
     using System.Net;
     using System.Net.Sockets;
     using System.Threading;
-
+    using System.Threading.Tasks;
     using netDumbster.smtp.Logging;
 
     /// <summary>
     /// Simple Smtp Server
     /// </summary>
-    public class SimpleSmtpServer:IDisposable
+    public class SimpleSmtpServer : IDisposable
     {
         /// <summary>
         /// Logger
@@ -27,9 +27,9 @@ namespace netDumbster.smtp
         private ConcurrentBag<SmtpMessage> smtpMessageStore = new ConcurrentBag<SmtpMessage>();
 
         /// <summary>
-        ///  Flag to stop server
+        ///  CancellationTokenSource to stop server
         /// </summary>
-        private volatile bool stop;
+        CancellationTokenSource cancellation = new CancellationTokenSource();
 
         /// <summary>
         /// TCP Listener
@@ -52,7 +52,7 @@ namespace netDumbster.smtp
         /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
         private SimpleSmtpServer(int port, bool useMessageStore)
             : this(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore))
-        {   
+        {
         }
 
         private SimpleSmtpServer(Configuration configuration)
@@ -70,7 +70,7 @@ namespace netDumbster.smtp
         /// The configuration.
         /// </value>
         public Configuration Configuration
-        { 
+        {
             get;
             private set;
         }
@@ -137,21 +137,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port)
         {
-            return SimpleSmtpServer.Start(port, 0);
-        }
-
-        /// <summary>
-        /// Starts server listening to the specified port with a simulated delay when processing a new SMTP message.
-        /// </summary>
-        /// <param name="port">The port.</param>
-        /// <param name="processingDelayInMilliseconds">The number of milliseconds to wait before processing a new SMTP message</param>
-        /// <returns></returns>
-        public static SimpleSmtpServer Start(int port, int processingDelayInMilliseconds)
-        {
-            return SimpleSmtpServer.Start(Configuration.Configure()
-                                                       .WithPort(port)
-                                                       .WithProcessingDelay(processingDelayInMilliseconds)
-                                          );
+            return SimpleSmtpServer.Start(port, true);
         }
 
         /// <summary>
@@ -162,19 +148,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port, bool useMessageStore)
         {
-            return SimpleSmtpServer.Start(port, useMessageStore, 0);
-        }
-
-        /// <summary>
-        /// Starts the specified port.
-        /// </summary>
-        /// <param name="port">The port.</param>
-        /// <param name="useMessageStore">if set to <c>true</c> [use message store].</param>
-        /// <param name="processingDelayInMilliseconds">The number of milliseconds to wait before processing a new SMTP message</param>
-        /// <returns></returns>
-        public static SimpleSmtpServer Start(int port, bool useMessageStore, int processingDelayInMilliseconds)
-        {
-            return SimpleSmtpServer.Start(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore).WithProcessingDelay(processingDelayInMilliseconds));
+            return SimpleSmtpServer.Start(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore));
         }
 
         internal static SimpleSmtpServer Start(Configuration configuration)
@@ -212,7 +186,7 @@ namespace netDumbster.smtp
             {
                 lock (this)
                 {
-                    this.stop = true;
+                    this.cancellation.Cancel();
 
                     // Kick the server accept loop
                     if (this.tcpListener != null)
@@ -254,12 +228,24 @@ namespace netDumbster.smtp
 
             this.log.DebugFormat("Started Tcp Listener at port {0}", this.Configuration.Port);
 
+            this.ServerReady.Set();
             try
             {
-                this.log.Debug("Calling BeginAcceptSocket.");
-                this.tcpListener.BeginAcceptSocket(new AsyncCallback(this._SocketHandler), this.tcpListener);
-                this.log.Debug("BeginAcceptSocket called.");
-                this.ServerReady.Set();
+
+                Task.Factory.StartNew(async () =>
+                   {
+                       while (this.tcpListener.Server.IsBound)
+                       {
+                           Socket socket = await this.tcpListener.AcceptSocketAsync();
+                           if (socket == null)
+                           {
+                               break;
+                           }
+
+                           this.SocketHandler(socket);
+                       }
+                   },
+                   cancellation.Token);
             }
             catch (Exception ex)
             {
@@ -271,28 +257,18 @@ namespace netDumbster.smtp
         /// Async Socket handler.
         /// </summary>
         /// <param name="result">The result.</param>
-        private void _SocketHandler(IAsyncResult result)
+        private void SocketHandler(Socket socket)
         {
-            if (this.stop)
+            if (this.cancellation.IsCancellationRequested)
             {
                 return;
             }
 
             this.log.Debug("Entering Socket Handler.");
 
-            if (this.Configuration.ProcessingDelayInMilliseconds > 0)
-            {
-                Thread.Sleep(this.Configuration.ProcessingDelayInMilliseconds);
-            }
-
             try
             {
-                TcpListener listener = (TcpListener)result.AsyncState;
-                listener.BeginAcceptSocket(new AsyncCallback(this._SocketHandler), listener);
-
-                this.log.Debug("Calling EndAcceptSocket.");
-
-                using (Socket socket = listener.EndAcceptSocket(result))
+                using (socket)
                 {
                     this.log.Debug("Socket accepted and ready to be processed.");
                     SmtpProcessor processor = new SmtpProcessor(string.Empty, this.Configuration.UseMessageStore ? this.smtpMessageStore : null);

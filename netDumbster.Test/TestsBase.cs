@@ -29,27 +29,27 @@ namespace netDumbster.Test
         }
 
         [Fact]
-        public void Send_100_Mails()
+        public void Send_10_Mails()
         {
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 10; i++)
             {
                 this.SendMail();
                 Assert.Equal(i + 1, this.server.ReceivedEmailCount);
             }
 
-            Assert.Equal(100, this.server.ReceivedEmailCount);
+            Assert.Equal(10, this.server.ReceivedEmailCount);
         }
 
         [Fact]
-        public void Send_100_Mail_With_SmtpAuth()
+        public void Send_10_Mail_With_SmtpAuth()
         {
-            for (var i = 0; i < 100; i++)
+            for (var i = 0; i < 10; i++)
             {
                 this.SendMail(true);
                 Assert.Equal(i + 1, this.server.ReceivedEmailCount);
             }
 
-            Assert.Equal(100, this.server.ReceivedEmailCount);
+            Assert.Equal(10, this.server.ReceivedEmailCount);
         }
 
         [Fact]
@@ -255,33 +255,6 @@ namespace netDumbster.Test
             SimpleSmtpServer randomPortServer = this.StartServer();
             Assert.True(randomPortServer.Configuration.Port > 0);
             randomPortServer.Stop();
-        }
-
-        [Theory()]
-        [InlineData(-1)]
-        [InlineData(0)]
-        [InlineData(5000)]
-        [InlineData(10000)]
-        public void Send_Email_With_Delayed_Processing(int processingDelay)
-        {
-            // Arrangeº
-            var port = 50003;
-            var server = SimpleSmtpServer.Start(port, true, processingDelay);
-
-            // Act
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            SendMail(false, true, null, port);
-            stopwatch.Stop();
-
-            // Assert
-            var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
-            Console.WriteLine(string.Format("Server took {0} ms to complete", elapsedMilliseconds));
-
-            Assert.True(elapsedMilliseconds >= processingDelay);
-
-            // Tidy up
-            server.Stop();
         }
 
         protected void SendMail()

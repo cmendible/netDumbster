@@ -23,5 +23,4 @@ obj/
 *.sbr
 *.scc
 *.sig
-_ReSharper*/
 /packages

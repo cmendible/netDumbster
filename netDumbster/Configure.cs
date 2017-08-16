@@ -56,18 +56,6 @@ namespace netDumbster.smtp
         }
 
         /// <summary>
-        /// Gets the number of milliseconds to wait before processing a new message.
-        /// </summary>
-        public int ProcessingDelayInMilliseconds
-        {
-            get;
-            private set;
-        }
-
-        /// <summary>
-
-
-        /// <summary>
         /// Configures this instance.
         /// </summary>
         /// <returns></returns>
@@ -119,17 +107,6 @@ namespace netDumbster.smtp
         public Configuration WithAddress(IPAddress address)
         {
             this.IPAddress = address;
-            return this;
-        }
-
-        /// <summary>
-        /// Configures with a processing delay
-        /// </summary>
-        /// <param name="milliseconds">The (minimum) number of milliseconds by which a new message is delay processing by</param>
-        /// <returns></returns>
-        public Configuration WithProcessingDelay(int milliseconds)
-        {
-            this.ProcessingDelayInMilliseconds = milliseconds;
             return this;
         }
 
