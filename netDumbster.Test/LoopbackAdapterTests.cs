@@ -4,9 +4,7 @@ namespace netDumbster.Test
 {
     using System.Net;
     using netDumbster.smtp;
-    using NUnit.Framework;
 
-    [TestFixture]
     public class LoopbackAdapterTests : TestsBase
     {
         protected override SimpleSmtpServer StartServer()

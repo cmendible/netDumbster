@@ -4,9 +4,7 @@
 namespace netDumbster.Test
 {
     using netDumbster.smtp;
-    using NUnit.Framework;
 
-    [TestFixture]
     public class Tests : TestsBase
     {
         protected override SimpleSmtpServer StartServer()
@@ -18,6 +16,5 @@ namespace netDumbster.Test
         {
             return SimpleSmtpServer.Start(port);
         }
-
     }
 }

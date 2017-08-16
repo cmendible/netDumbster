@@ -6,15 +6,14 @@ using System.Net;
 using System.Net.Mail;
 using System.Net.Mime;
 using System.Text;
-using NUnit.Framework;
 using netDumbster.smtp;
 using netDumbster.smtp.Logging;
 using System.Diagnostics;
+using Xunit;
 
 namespace netDumbster.Test
 {
-    [TestFixture]
-    public abstract class TestsBase
+    public abstract class TestsBase : IDisposable
     {
         protected SimpleSmtpServer server;
 
@@ -26,48 +25,43 @@ namespace netDumbster.Test
         public TestsBase()
         {
             LogManager.GetLogger = type => new ConsoleLogger(type);
+            this.server = this.StartServer();
         }
 
-        [TearDown]
-        public void TearDown()
-        {
-            this.server.Stop();
-        }
-
-        [Test]
+        [Fact]
         public void Send_100_Mails()
         {
             for (var i = 0; i < 100; i++)
             {
                 this.SendMail();
-                Assert.AreEqual(i + 1, this.server.ReceivedEmailCount);
+                Assert.Equal(i + 1, this.server.ReceivedEmailCount);
             }
 
-            Assert.AreEqual(100, this.server.ReceivedEmailCount);
+            Assert.Equal(100, this.server.ReceivedEmailCount);
         }
 
-        [Test]
+        [Fact]
         public void Send_100_Mail_With_SmtpAuth()
         {
             for (var i = 0; i < 100; i++)
             {
                 this.SendMail(true);
-                Assert.AreEqual(i + 1, this.server.ReceivedEmailCount);
+                Assert.Equal(i + 1, this.server.ReceivedEmailCount);
             }
 
-            Assert.AreEqual(100, this.server.ReceivedEmailCount);
+            Assert.Equal(100, this.server.ReceivedEmailCount);
         }
 
-        [Test]
+        [Fact]
         public void Send_Email_And_Restart_Server_Using_The_Same_Port()
         {
-            int port = 50003;
+            int port = 5003;
             SimpleSmtpServer fixedPortServer = this.StartServer(port);
 
             this.SendMail(false, false, null, port);
 
-            Assert.AreEqual(1, fixedPortServer.ReceivedEmailCount);
-            Assert.AreEqual("this is the body", fixedPortServer.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal(1, fixedPortServer.ReceivedEmailCount);
+            Assert.Equal("this is the body", fixedPortServer.ReceivedEmail[0].MessageParts[0].BodyData);
 
             fixedPortServer.Stop();
 
@@ -75,22 +69,22 @@ namespace netDumbster.Test
 
             this.SendMail(false, false, null, port);
 
-            Assert.AreEqual(1, fixedPortServer.ReceivedEmailCount);
-            Assert.AreEqual("this is the body", fixedPortServer.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal(1, fixedPortServer.ReceivedEmailCount);
+            Assert.Equal("this is the body", fixedPortServer.ReceivedEmail[0].MessageParts[0].BodyData);
 
             fixedPortServer.Stop();
         }
 
         // Test is run several several times since we're testing asynchronous behaviour
-        [Test]
+        [Theory]
         [Repeat(5)]
         public void Send_Email_When_Server_Not_Running()
         {
             this.server.Stop();
-            Assert.Throws<SmtpException>(() => this.SendMail());
+            Assert.Throws<NullReferenceException>(() => this.SendMail());
         }
 
-        [Test]
+        [Fact]
         public void Send_Email_With_AlternateViews()
         {
             using (var client = new SmtpClient("localhost", this.server.Configuration.Port))
@@ -100,17 +94,17 @@ namespace netDumbster.Test
                 client.Send(mailMessage);
             }
 
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
             var smtpMessage = this.server.ReceivedEmail[0];
 
-            Assert.AreEqual(2, smtpMessage.MessageParts.Length);
-            Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
-            Assert.AreEqual("this is the body", smtpMessage.MessageParts[0].BodyData);
-            Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
-            Assert.AreEqual("FooBar", smtpMessage.MessageParts[1].BodyData);
+            Assert.Equal(2, smtpMessage.MessageParts.Length);
+            Assert.True(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
+            Assert.Equal("this is the body", smtpMessage.MessageParts[0].BodyData);
+            Assert.True(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
+            Assert.Equal("FooBar", smtpMessage.MessageParts[1].BodyData);
         }
 
-        [Test]
+        [Fact]
         public void Send_Email_With_AlternateViews_And_Attachments()
         {
             using (var client = new SmtpClient("localhost", this.server.Configuration.Port))
@@ -123,30 +117,30 @@ namespace netDumbster.Test
                 client.Send(mailMessage);
             }
 
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
             var smtpMessage = this.server.ReceivedEmail[0];
-            Assert.AreEqual(5, smtpMessage.MessageParts.Length);
-            Assert.IsTrue(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
-            Assert.AreEqual("this is the body", smtpMessage.MessageParts[0].BodyData);
-            Assert.IsTrue(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
-            Assert.AreEqual("FooBar", smtpMessage.MessageParts[1].BodyData);
+            Assert.Equal(5, smtpMessage.MessageParts.Length);
+            Assert.True(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
+            Assert.Equal("this is the body", smtpMessage.MessageParts[0].BodyData);
+            Assert.True(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
+            Assert.Equal("FooBar", smtpMessage.MessageParts[1].BodyData);
         }
 
-        [Test]
+        [Fact]
         public void Send_Email_With_Attachment()
         {
             var data = new byte[] { 0x1 };
 
             this.SendMail(false, true, data);
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
-            Assert.AreEqual("this is the html body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
-            Assert.IsNotNull(this.server.ReceivedEmail[0].MessageParts[1]);
-            Assert.IsNotNull(this.server.ReceivedEmail[0].MessageParts[1].BodyData);
-            Assert.IsNotEmpty(this.server.ReceivedEmail[0].MessageParts[1].BodyData);
-            Assert.AreEqual(System.Convert.ToBase64String(data) + "\r\n", this.server.ReceivedEmail[0].MessageParts[1].BodyData);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
+            Assert.Equal("this is the html body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.NotNull(this.server.ReceivedEmail[0].MessageParts[1]);
+            Assert.NotNull(this.server.ReceivedEmail[0].MessageParts[1].BodyData);
+            Assert.NotEmpty(this.server.ReceivedEmail[0].MessageParts[1].BodyData);
+            Assert.Equal(System.Convert.ToBase64String(data) + "\r\n", this.server.ReceivedEmail[0].MessageParts[1].BodyData);
         }
 
-        [Test]
+        [Fact]
         public void Send_Email_With_Many_Lines()
         {
             using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
@@ -156,11 +150,11 @@ namespace netDumbster.Test
                 client.Send(mailMessage);
             }
 
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
-            Assert.AreEqual("this is the body\r\nline2\r\nline3", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
+            Assert.Equal("this is the body\r\nline2\r\nline3", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
         }
 
-        [Test]
+        [Fact]
         public void Send_Email_With_Priority()
         {
             using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
@@ -171,14 +165,14 @@ namespace netDumbster.Test
                 client.Send(mailMessage);
             }
 
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
-            Assert.AreEqual("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
-            Assert.AreEqual("1", this.server.ReceivedEmail[0].XPriority);
-            Assert.AreEqual("urgent", this.server.ReceivedEmail[0].Priority);
-            Assert.AreEqual("high", this.server.ReceivedEmail[0].Importance);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
+            Assert.Equal("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal("1", this.server.ReceivedEmail[0].XPriority);
+            Assert.Equal("urgent", this.server.ReceivedEmail[0].Priority);
+            Assert.Equal("high", this.server.ReceivedEmail[0].Importance);
         }
 
-        [Test]
+        [Fact]
         public void Send_Email_With_RussianText()
         {
             string body = string.Empty;
@@ -195,25 +189,25 @@ namespace netDumbster.Test
                 client.Send(mailMessage);
             }
 
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
-            Assert.AreEqual("base64", this.server.ReceivedEmail[0].Headers["content-transfer-encoding"]);
-            Assert.AreEqual(
+            Assert.Equal(1, this.server.ReceivedEmailCount);
+            Assert.Equal("base64", this.server.ReceivedEmail[0].Headers["content-transfer-encoding"]);
+            Assert.Equal(
                 body,
                 System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(this.server.ReceivedEmail[0].MessageParts[0].BodyData)));
 
             this.server.Stop();
         }
 
-        [Test]
+        [Fact]
         public void Send_Fires_Message_Received_Event()
         {
             int port = 50004;
             SimpleSmtpServer fixedPortServer = this.StartServer(port);
             fixedPortServer.MessageReceived += (sender, args) =>
             {
-                Assert.IsNotNull(args.Message);
-                Assert.AreEqual(1, fixedPortServer.ReceivedEmailCount);
-                Assert.AreEqual("this is the body", args.Message.MessageParts[0].BodyData);
+                Assert.NotNull(args.Message);
+                Assert.Equal(1, fixedPortServer.ReceivedEmailCount);
+                Assert.Equal("this is the body", args.Message.MessageParts[0].BodyData);
             };
 
             this.SendMail(false, false, null, port);
@@ -221,61 +215,56 @@ namespace netDumbster.Test
             fixedPortServer.Stop();
         }
 
-        [Test]
+        [Fact]
         public void Send_Html_Email()
         {
             this.SendMail(false, true, null);
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
-            Assert.AreEqual("this is the html body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
+            Assert.Equal("this is the html body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
         }
 
-        [Test]
+        [Fact]
         public void Send_One_Mail()
         {
             this.SendMail();
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
-            Assert.AreEqual("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
+            Assert.Equal("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
         }
 
-        [Test]
+        [Fact]
         public void Send_One_Mail_Clear_Send_Another_Mail()
         {
             this.SendMail();
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
-            Assert.AreEqual("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
+            Assert.Equal("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
             this.server.ClearReceivedEmail();
             this.SendMail();
-            Assert.AreEqual("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
         }
 
-        [Test]
+        [Fact]
         public void Send_One_Mail_With_SmtpAuth()
         {
             this.SendMail(true);
-            Assert.AreEqual(1, this.server.ReceivedEmailCount);
+            Assert.Equal(1, this.server.ReceivedEmailCount);
         }
 
-        [SetUp]
-        public void SetUp()
-        {
-            this.server = this.StartServer();
-        }
-
-        [Test]
+        [Fact]
         public void Start_Server_Random_Port()
         {
             SimpleSmtpServer randomPortServer = this.StartServer();
-            Assert.Greater(randomPortServer.Configuration.Port, 0);
+            Assert.True(randomPortServer.Configuration.Port > 0);
             randomPortServer.Stop();
         }
 
-        [TestCase(-1)]
-        [TestCase(0)]
-        [TestCase(5000)]
-        [TestCase(10000)]
+        [Theory()]
+        [InlineData(-1)]
+        [InlineData(0)]
+        [InlineData(5000)]
+        [InlineData(10000)]
         public void Send_Email_With_Delayed_Processing(int processingDelay)
         {
-            // Arrange
+            // Arrangeº
             var port = 50003;
             var server = SimpleSmtpServer.Start(port, true, processingDelay);
 
@@ -289,12 +278,11 @@ namespace netDumbster.Test
             var elapsedMilliseconds = stopwatch.ElapsedMilliseconds;
             Console.WriteLine(string.Format("Server took {0} ms to complete", elapsedMilliseconds));
 
-            Assert.That(elapsedMilliseconds, Is.GreaterThanOrEqualTo(processingDelay));
+            Assert.True(elapsedMilliseconds >= processingDelay);
 
             // Tidy up
             server.Stop();
         }
-
 
         protected void SendMail()
         {
@@ -339,6 +327,27 @@ namespace netDumbster.Test
 
                 client.Send(mailMessage);
             }
+        }
+
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.server.Stop();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        void IDisposable.Dispose()
+        {
+            Dispose(true);
         }
     }
 }
