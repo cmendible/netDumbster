@@ -16,7 +16,7 @@ var server = SimpleSmtpServer.Start(port);
 
 Check received email count:
 ````
-var count =server. ReceivedEmailCount
+var count = server.ReceivedEmailCount
 ````
 
 Get the body of the first email received:
