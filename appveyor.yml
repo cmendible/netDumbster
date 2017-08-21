@@ -14,8 +14,8 @@ before_build:
   # Display minimal restore text
   - cmd: dotnet restore --verbosity m
 build_script:
-  # output will be in .\netDumbster\bin\release\netstandard2.0\publish
-  - cmd: dotnet publish -c release
+  # output will be in .\netDumbster\bin\release\netstandard2.0\ & .\netDumbster\bin\release\net451\ 
+  - cmd: dotnet build -c release
 after_build:
   # For once the build has completed
 artifacts:
