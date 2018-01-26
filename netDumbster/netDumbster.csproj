@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net451;netstandard2.0</TargetFrameworks>
-    <Version>2.0.0.1</Version>
+    <Version>2.0.0.2</Version>
     <Authors>Carlos Mendible</Authors>
     <Company>Hexasystems Inc.</Company>
     <PackageId>netDumbster</PackageId>
@@ -15,7 +15,7 @@
     <Description>netDumbster is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)
 	netDumbster is based on the API of nDumbster (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
 	  </Description>
-    <PackageReleaseNotes>Also targeting .NET Framework 4.5.1</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <AssemblyOriginatorKeyFile>netDumbster.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
