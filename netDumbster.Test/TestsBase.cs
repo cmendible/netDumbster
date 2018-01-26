@@ -81,7 +81,7 @@ namespace netDumbster.Test
         public void Send_Email_When_Server_Not_Running()
         {
             this.server.Stop();
-            Assert.Throws<NullReferenceException>(() => this.SendMail());
+            Assert.Throws<SmtpException>(() => this.SendMail());
         }
 
         [Fact]
