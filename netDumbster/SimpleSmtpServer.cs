@@ -223,7 +223,7 @@ namespace netDumbster.smtp
 
             // Fix the problem with the scenario if the server is stopped, and then
             // restarted with the same port, it will not throw an error.
-            this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
             this.tcpListener.Start();
 
             this.log.DebugFormat("Started Tcp Listener at port {0}", this.Configuration.Port);
