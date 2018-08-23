@@ -19,6 +19,7 @@ namespace netDumbster.smtp
         {
             this.UseMessageStore = true;
             this.IPAddress = IPAddress.Any;
+            this.ReuseAddress = true;
         }
 
         /// <summary>
@@ -55,6 +56,12 @@ namespace netDumbster.smtp
             internal set;
         }
 
+        public bool ReuseAddress
+        {
+            get;
+            internal set;
+        }
+
         /// <summary>
         /// Configures this instance.
         /// </summary>
@@ -76,6 +83,12 @@ namespace netDumbster.smtp
                 config = this.WithRandomPort();
             }
             return SimpleSmtpServer.Start(config);
+        }
+
+        public Configuration DoNotReuseAddress()
+        {
+            this.ReuseAddress = false;
+            return this;
         }
 
         /// <summary>
