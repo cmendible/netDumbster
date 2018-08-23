@@ -41,7 +41,7 @@ namespace netDumbster.smtp
         /// </summary>
         /// <param name="port">The port.</param>
         private SimpleSmtpServer(int port)
-        : this(port, true)
+            : this(port, true)
         {
         }
 
@@ -154,7 +154,7 @@ namespace netDumbster.smtp
         internal static SimpleSmtpServer Start(Configuration configuration)
         {
             var server = new SimpleSmtpServer(configuration);
-            new Thread(new ThreadStart(server.StartListening)).Start();
+            server.StartListening();
             server.ServerReady.WaitOne();
             return server;
         }
