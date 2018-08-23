@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net452;netstandard2.0</TargetFrameworks>
-    <Version>2.0.0.3</Version>
+    <Version>2.0.0.4</Version>
     <Authors>Carlos Mendible</Authors>
     <Company>Hexasystems Inc.</Company>
     <PackageId>netDumbster</PackageId>
