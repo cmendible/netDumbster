@@ -19,7 +19,7 @@ steps:
 
 - script: |
     cd netDumbster
-    dotnet publish --framework "netstandard2.0" --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
-    dotnet publish --framework "net452" --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)
+    dotnet publish --framework "netstandard2.0" --configuration $(buildConfiguration) --output "$(Build.ArtifactStagingDirectory)\netstandard2.0"
+    dotnet publish --framework "net452" --configuration $(buildConfiguration) --output "$(Build.ArtifactStagingDirectory)\net452"
 
 - task: PublishBuildArtifacts@1
