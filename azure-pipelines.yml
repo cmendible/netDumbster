@@ -18,6 +18,7 @@ steps:
     arguments: '--configuration $(buildConfiguration) --collect "Code coverage"'
 
 - script: |
+    cd netDumbster
     dotnet publish --framework "netstandard2.0" --configuration $(buildConfiguration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
     dotnet publish --framework "net452" --configuration $(buildConfiguration) --output $BUILD_ARTIFACTSTAGINGDIRECTORY
 
