@@ -13,12 +13,9 @@ using Xunit;
 
 namespace netDumbster.Test
 {
-    public abstract class TestsBase : IDisposable
+    public class TestsBase : IDisposable
     {
         protected SimpleSmtpServer server;
-
-        protected abstract SimpleSmtpServer StartServer();
-        protected abstract SimpleSmtpServer StartServer(int port);
 
         private Random _Rnd = new Random();
 
@@ -26,6 +23,16 @@ namespace netDumbster.Test
         {
             LogManager.GetLogger = type => new ConsoleLogger(type);
             this.server = this.StartServer();
+        }
+
+        protected virtual SimpleSmtpServer StartServer()
+        {
+            return SimpleSmtpServer.Start();
+        }
+
+        protected virtual SimpleSmtpServer StartServer(int port)
+        {
+            return SimpleSmtpServer.Start(port);
         }
 
         [Fact]
@@ -137,7 +144,7 @@ namespace netDumbster.Test
             Assert.NotNull(this.server.ReceivedEmail[0].MessageParts[1]);
             Assert.NotNull(this.server.ReceivedEmail[0].MessageParts[1].BodyData);
             Assert.NotEmpty(this.server.ReceivedEmail[0].MessageParts[1].BodyData);
-            Assert.Equal(System.Convert.ToBase64String(data) + "\r\n", this.server.ReceivedEmail[0].MessageParts[1].BodyData);
+            Assert.Equal(data, UTF8Encoding.UTF8.GetBytes(this.server.ReceivedEmail[0].MessageParts[1].BodyData));
         }
 
         [Fact]
@@ -190,10 +197,7 @@ namespace netDumbster.Test
             }
 
             Assert.Equal(1, this.server.ReceivedEmailCount);
-            Assert.Equal("base64", this.server.ReceivedEmail[0].Headers["content-transfer-encoding"]);
-            Assert.Equal(
-                body,
-                System.Text.Encoding.UTF8.GetString(System.Convert.FromBase64String(this.server.ReceivedEmail[0].MessageParts[0].BodyData)));
+            Assert.Equal(body, this.server.ReceivedEmail[0].MessageParts[0].BodyData);
 
             this.server.Stop();
         }
@@ -275,6 +279,23 @@ namespace netDumbster.Test
             randomPortServer.Stop();
         }
 
+        [Fact]
+        public void Send_Attachments_Mails_SpecialChars()
+        {
+            var files = Directory.GetFiles("Content");
+            SendMail(false, files);
+            Assert.Equal(files.Length, this.server.ReceivedEmailCount);
+            var smtpMail = this.server.ReceivedEmail[0];
+            using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(new System.IO.StringReader(smtpMail.Data)))
+            {
+                foreach (var m in mailMessage.Attachments)
+                {
+                    Console.WriteLine(m.Name);
+                    Assert.True(files[0].EndsWith(m.Name));
+                }
+            }
+        }
+
         protected void SendMail()
         {
             this.SendMail(false);
@@ -318,6 +339,24 @@ namespace netDumbster.Test
 
                 client.Send(mailMessage);
             }
+        }
+
+        protected void SendMail(bool smtpAuth, IEnumerable<string> attach)
+        {
+            SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port);
+            var mailMessage = new MailMessage("cfm@mendible.com", "kbm@mendible.com", "test", "test test test");
+            foreach (var fileName in attach)
+                mailMessage.Attachments.Add(new Attachment(fileName));
+
+            if (smtpAuth)
+            {
+                NetworkCredential credentials = new NetworkCredential("user", "pwd");
+                client.Credentials = credentials;
+                client.EnableSsl = false;
+            }
+            client.Send(mailMessage);
+
+            client.Dispose();
         }
 
         private bool disposedValue = false; // To detect redundant calls

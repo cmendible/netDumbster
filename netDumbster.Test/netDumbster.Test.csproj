@@ -16,4 +16,10 @@
     <ProjectReference Include="..\netDumbster\netDumbster.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+  <Content Include="Content/A-RC’S_TEST´ÉÁÍ.html">
+   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+  </Content>
+ </ItemGroup>
+
 </Project>

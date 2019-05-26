@@ -14,8 +14,6 @@ namespace netDumbster.smtp
     /// </summary>
     public class SmtpMessagePart
     {
-        private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
-
         private string bodyData = string.Empty;
         private string headerData = string.Empty;
         private NameValueCollection headerFields = null;
@@ -57,7 +55,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (this. headerFields == null)
+                if (this.headerFields == null)
                 {
                     // headerFields = SmtpMessage.ParseHeaders( headerData );
                 }

@@ -18,8 +18,6 @@ namespace netDumbster.smtp
     /// </summary>
     public class SmtpMessage
     {
-        private static readonly string DOUBLE_NEWLINE = Environment.NewLine + Environment.NewLine;
-
         private RawSmtpMessage rawSmtpMessage;
 
         /// <summary>
@@ -28,7 +26,9 @@ namespace netDumbster.smtp
         public SmtpMessage(RawSmtpMessage rawSmtpMessage)
         {
             this.rawSmtpMessage = rawSmtpMessage;
-            using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(new System.IO.StringReader(this.rawSmtpMessage.Data.ToString())))
+            var rawMessage = this.rawSmtpMessage.Data.ToString();
+            rawMessage = rawMessage.Substring(0, rawMessage.Length - 4);
+            using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(rawMessage))
             {
                 this.Headers = mailMessage.Headers;
                 this.FromAddress = new EmailAddress(mailMessage.From.Address);
