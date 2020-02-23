@@ -203,6 +203,24 @@ namespace netDumbster.Test
         }
 
         [Fact]
+        public void Send_Email_With_UTF8_Chars()
+        {
+            string body = string.Empty;
+            using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
+            {
+                body = "µ¶®¥§";
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", body);
+                mailMessage.IsBodyHtml = false;
+                client.Send(mailMessage);
+            }
+
+            Assert.Equal(1, this.server.ReceivedEmailCount);
+            Assert.Equal(body, this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+
+            this.server.Stop();
+        }
+
+        [Fact]
         public void Send_Fires_Message_Received_Event()
         {
             int port = 50004;
