@@ -16,7 +16,10 @@ namespace netDumbster.Test
         public MailKitTests()
         {
             LogManager.GetLogger = type => new ConsoleLogger(type);
-            _server = SimpleSmtpServer.Start();
+            
+            _server = Configuration.Configure()
+                .WithRandomPort()
+                .Build();
         }
 
         /// <summary>
