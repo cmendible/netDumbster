@@ -2,8 +2,10 @@ name: dotnetcore
 on: [push]
 jobs:
   build:
-    name: Build
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Check out code
         uses: actions/checkout@v1
@@ -11,7 +13,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.1.101
+          dotnet-version: 3.1.102
 
       - name: Build
         run: dotnet build
