@@ -1,4 +1,4 @@
-[![Build Status](https://mendible.visualstudio.com/mendible/_apis/build/status/cmendible.netDumbster)](https://mendible.visualstudio.com/mendible/_build/latest?definitionId=2) [![Build status](https://ci.appveyor.com/api/projects/status/su9xd1ddo1bv5q4i?svg=true)](https://ci.appveyor.com/project/cmendible/netdumbster)
+[![Build Status](https://mendible.visualstudio.com/mendible/_apis/build/status/cmendible.netDumbster)](https://mendible.visualstudio.com/mendible/_build/latest?definitionId=2)
 
 # netDumbster 
 is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)

@@ -27,7 +27,7 @@ namespace netDumbster.smtp
         {
             this.rawSmtpMessage = rawSmtpMessage;
             var rawMessage = this.rawSmtpMessage.Data.ToString();
-            rawMessage = rawMessage.Substring(0, rawMessage.Length - 4);
+            rawMessage = rawMessage.TrimEnd('\r', '\n');
             using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(rawMessage))
             {
                 this.Headers = mailMessage.Headers;
