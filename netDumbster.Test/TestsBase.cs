@@ -256,20 +256,17 @@ namespace netDumbster.Test
         }
 
         [Fact]
-        public void If_Client_Is_Not_Disposed_Server_Everything_Keeps_Working()
+        public void If_Client_Is_Not_Disposed_Server_Keeps_Working()
         {
-            var port = 25;
             var host = "localhost";
-            using (SimpleSmtpServer emailServer = this.StartServer(port))
-            {
-                SmtpClient client = new SmtpClient(host, port);
-                client.Send("noone@nowhere.com", "nobody@nowhere.com", "This is an email", "body of email");
-            }
+            using var emailServer = Configuration.Configure().WithRandomPort().Build();
 
-            using (SimpleSmtpServer emailServer = this.StartServer(port))
+            var client = new SmtpClient(host, emailServer.Configuration.Port);
+            client.Send("noone@nowhere.com", "nobody@nowhere.com", "This is an email", "body of email");
+
+            using (var client2 = new SmtpClient(host, emailServer.Configuration.Port))
             {
-                using (SmtpClient client = new SmtpClient(host, port))
-                    client.Send("noone@nowhere.com", "nobody@nowhere.com", "This is an email", "body of email");
+                client2.Send("noone@nowhere.com", "nobody@nowhere.com", "This is an email", "body of email");
             }
         }
 
