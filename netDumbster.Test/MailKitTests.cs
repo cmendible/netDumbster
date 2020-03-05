@@ -16,7 +16,7 @@ namespace netDumbster.Test
         public MailKitTests()
         {
             LogManager.GetLogger = type => new ConsoleLogger(type);
-            
+
             _server = Configuration.Configure()
                 .WithRandomPort()
                 .Build();
@@ -28,7 +28,7 @@ namespace netDumbster.Test
         [Fact]
         public async Task Send_WithMailKit_WholeBodyMessageIsPreserved()
         {
-            var expectedBody = "this is the body\r\nline2\r\nline3";
+            var expectedBody = $"this is the body{Environment.NewLine}line2{Environment.NewLine}line3";
 
             using var client = new SmtpClient
             {

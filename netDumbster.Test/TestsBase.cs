@@ -150,15 +150,17 @@ namespace netDumbster.Test
         [Fact]
         public void Send_Email_With_Many_Lines()
         {
+            var expectedBody = $"this is the body{Environment.NewLine}line2{Environment.NewLine}line3";
+
             using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
             {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body\r\nline2\r\nline3");
+                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", expectedBody);
                 mailMessage.IsBodyHtml = false;
                 client.Send(mailMessage);
             }
 
             Assert.Equal(1, this.server.ReceivedEmailCount);
-            Assert.Equal("this is the body\r\nline2\r\nline3", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
+            Assert.Equal(expectedBody, this.server.ReceivedEmail[0].MessageParts[0].BodyData);
         }
 
         [Fact]
