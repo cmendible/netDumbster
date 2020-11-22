@@ -1,12 +1,11 @@
-using System;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Net.Mail;
-using System.Net.Mime;
-
 namespace Extensions
 {
+    using System.IO;
+    using System.Linq;
+    using System.Text;
+    using System.Net.Mail;
+    using System.Net.Mime;
+
     public static class MimeKitExtensions
     {
         static ContentType GetContentType(MimeKit.ContentType contentType)

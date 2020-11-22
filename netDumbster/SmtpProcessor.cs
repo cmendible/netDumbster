@@ -6,9 +6,7 @@ namespace netDumbster.smtp
 {
     using System;
     using System.Collections.Concurrent;
-    using System.Collections.Generic;
     using System.Net;
-    using System.Net.Mail;
     using System.Net.Sockets;
     using System.Text;
     using System.Text.RegularExpressions;

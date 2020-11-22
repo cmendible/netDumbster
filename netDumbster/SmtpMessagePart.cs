@@ -4,10 +4,7 @@
 
 namespace netDumbster.smtp
 {
-    using System;
-    using System.Collections;
     using System.Collections.Specialized;
-    using System.Text.RegularExpressions;
 
     /// <summary>
     /// Stores a single part of a multipart message.

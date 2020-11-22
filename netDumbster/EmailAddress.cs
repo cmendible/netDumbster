@@ -4,7 +4,6 @@
 
 namespace netDumbster.smtp
 {
-    using System;
     using System.Text.RegularExpressions;
 
     /// <summary>

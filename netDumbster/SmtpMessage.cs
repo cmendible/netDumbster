@@ -4,14 +4,10 @@
 
 namespace netDumbster.smtp
 {
-    using System;
-    using System.Collections;
     using System.Collections.Specialized;
     using System.Linq;
     using System.Net;
     using System.Net.Mail;
-    using System.Text;
-    using System.Text.RegularExpressions;
 
     /// <summary>
     /// Stores an incoming SMTP Message.
