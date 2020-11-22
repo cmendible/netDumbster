@@ -1,13 +1,13 @@
-﻿using MailKit.Net.Smtp;
-using MimeKit;
-using netDumbster.smtp;
-using netDumbster.smtp.Logging;
-using System;
-using System.Threading.Tasks;
-using Xunit;
-
-namespace netDumbster.Test
+﻿namespace netDumbster.Test
 {
+    using MailKit.Net.Smtp;
+    using MimeKit;
+    using netDumbster.smtp;
+    using netDumbster.smtp.Logging;
+    using System;
+    using System.Threading.Tasks;
+    using Xunit;
+
     public class MailKitTests : IDisposable
     {
         private bool _disposed;
