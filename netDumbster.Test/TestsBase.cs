@@ -1,18 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Net;
-using System.Net.Mail;
-using System.Net.Mime;
-using System.Text;
-using netDumbster.smtp;
-using netDumbster.smtp.Logging;
-using System.Diagnostics;
-using Xunit;
-
-namespace netDumbster.Test
+﻿namespace netDumbster.Test
 {
+    using System;
+    using System.Collections.Generic;
+    using System.IO;
+    using System.Net;
+    using System.Net.Mail;
+    using System.Net.Mime;
+    using System.Text;
+    using netDumbster.smtp;
+    using netDumbster.smtp.Logging;
+    using Xunit;
+    using System.Threading.Tasks;
+
     public class TestsBase : IDisposable
     {
         protected SimpleSmtpServer server;
@@ -148,7 +147,7 @@ namespace netDumbster.Test
         }
 
         [Fact]
-        public void Send_Email_With_Many_Lines()
+        public void Send_Multiline_Email()
         {
             var expectedBody = $"this is the body{Environment.NewLine}line2{Environment.NewLine}line3";
 
@@ -313,6 +312,28 @@ namespace netDumbster.Test
                     Console.WriteLine(m.Name);
                     Assert.True(files[0].EndsWith(m.Name));
                 }
+            }
+        }
+
+        [Fact(Timeout = 10000)]
+        public async Task Reusing_Smtp_Client_Should_Not_Fail()
+        {
+            var config = Configuration.Configure();
+            using var server = SimpleSmtpServer.Start(config.WithRandomPort().Port);
+            var mailClient = new SmtpClient
+            {
+                Host = "localhost",
+                Port = server.Configuration.Port,
+                EnableSsl = false
+            };
+
+            for (int messageNo = 0; messageNo < 2; messageNo++)
+            {
+                var mailMessage = new MailMessage("one@example.com", "two@example.com");
+
+                await mailClient.SendMailAsync(mailMessage);
+
+                Assert.Equal(messageNo + 1, server.ReceivedEmailCount);
             }
         }
 
