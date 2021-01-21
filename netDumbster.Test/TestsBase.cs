@@ -11,6 +11,7 @@
     using netDumbster.smtp.Logging;
     using Xunit;
     using System.Threading.Tasks;
+    using System.Net.Sockets;
 
     public class TestsBase : IDisposable
     {
@@ -257,7 +258,7 @@
         [Fact]
         public void If_Client_Is_Not_Disposed_Server_Everything_Keeps_Working()
         {
-            var port = 25;
+            var port = GetRandomUnusedPort();
             var host = "localhost";
             using (SimpleSmtpServer emailServer = this.StartServer(port))
             {
@@ -412,6 +413,22 @@
                 }
 
                 disposedValue = true;
+            }
+        }
+
+        static int GetRandomUnusedPort()
+        {
+            try
+            {
+                var listener = new TcpListener(IPAddress.Any, 0);
+                listener.Start();
+                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+                listener.Stop();
+                return port;
+            }
+            catch
+            {
+                throw;
             }
         }
 
