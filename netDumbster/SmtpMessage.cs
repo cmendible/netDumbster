@@ -34,6 +34,7 @@ namespace netDumbster.smtp
                 this.LocalPort = rawSmtpMessage.LocalPort;
                 this.RemoteIPAddress = rawSmtpMessage.RemoteIPAddress;
                 this.RemotePort = rawSmtpMessage.RemotePort;
+                this.Subject = mailMessage.Subject;
             }
         }
 
@@ -138,6 +139,15 @@ namespace netDumbster.smtp
         /// Gets the remote port.
         /// </summary>
         public int RemotePort
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// Subject
+        /// </summary>
+        public string Subject
         {
             get;
             private set;
