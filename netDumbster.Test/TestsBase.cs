@@ -36,6 +36,13 @@
         }
 
         [Fact]
+        public void Subject_Is_Not_Empty()
+        {
+            this.SendMail();
+            Assert.Equal("test", this.server.ReceivedEmail[0].Subject);
+        }
+
+        [Fact]
         public void Send_10_Mails()
         {
             for (var i = 0; i < 10; i++)
@@ -105,9 +112,9 @@
             var smtpMessage = this.server.ReceivedEmail[0];
 
             Assert.Equal(2, smtpMessage.MessageParts.Length);
-            Assert.True(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
+            Assert.Contains("text/plain", smtpMessage.MessageParts[0].HeaderData);
             Assert.Equal("this is the body", smtpMessage.MessageParts[0].BodyData);
-            Assert.True(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
+            Assert.Contains("text/html", smtpMessage.MessageParts[1].HeaderData);
             Assert.Equal("FooBar", smtpMessage.MessageParts[1].BodyData);
         }
 
@@ -127,9 +134,9 @@
             Assert.Equal(1, this.server.ReceivedEmailCount);
             var smtpMessage = this.server.ReceivedEmail[0];
             Assert.Equal(5, smtpMessage.MessageParts.Length);
-            Assert.True(smtpMessage.MessageParts[0].HeaderData.Contains("text/plain"));
+            Assert.Contains("text/plain", smtpMessage.MessageParts[0].HeaderData);
             Assert.Equal("this is the body", smtpMessage.MessageParts[0].BodyData);
-            Assert.True(smtpMessage.MessageParts[1].HeaderData.Contains("text/html"));
+            Assert.Contains("text/html", smtpMessage.MessageParts[1].HeaderData);
             Assert.Equal("FooBar", smtpMessage.MessageParts[1].BodyData);
         }
 
@@ -311,7 +318,7 @@
                 foreach (var m in mailMessage.Attachments)
                 {
                     Console.WriteLine(m.Name);
-                    Assert.True(files[0].EndsWith(m.Name));
+                    Assert.EndsWith(m.Name, files[0]);
                 }
             }
         }
