@@ -343,44 +343,52 @@ namespace netDumbster.smtp
 
                     switch (inputs[0].ToLower())
                     {
-                    case "helo":
-                        this.Helo(context, inputs);
-                        break;
-                    case "rset":
-                        this.Rset(context);
-                        break;
-                    case "noop":
-                        context.WriteLine(MESSAGE_OK);
-                        break;
-                    case "quit":
-                        isRunning = false;
-                        context.WriteLine(MESSAGE_GOODBYE);
-                        context.Close();
-                        break;
-                    case "mail":
-                        if (inputs[1].ToLower().StartsWith("from"))
-                        {
-                            this.Mail(context, inputLine.Substring(inputLine.IndexOf(" ")));
+                        case "helo":
+                            this.Helo(context, inputs);
                             break;
-                        }
-
-                        context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
-                        break;
-                    case "rcpt":
-                        if (inputs[1].ToLower().StartsWith("to"))
-                        {
-                            this.Rcpt(context, inputLine.Substring(inputLine.IndexOf(" ")));
+                        case "ehlo":                           
+                            context.WriteLine("250-{inputs[1]}");
+                            context.WriteLine("250 AUTH PLAIN");
+                            context.LastCommand = COMMAND_HELO;
                             break;
-                        }
+                        case "rset":
+                            this.Rset(context);
+                            break;
+                        case "noop":
+                            context.WriteLine(MESSAGE_OK);
+                            break;
+                        case "quit":
+                            isRunning = false;
+                            context.WriteLine(MESSAGE_GOODBYE);
+                            context.Close();
+                            break;
+                        case "mail":
+                            if (inputs[1].ToLower().StartsWith("from"))
+                            {
+                                this.Mail(context, inputLine.Substring(inputLine.IndexOf(" ")));
+                                break;
+                            }
 
-                        context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
-                        break;
-                    case "data":
-                        this.Data(context);
-                        break;
-                    default:
-                        context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
-                        break;
+                            context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
+                            break;
+                        case "rcpt":
+                            if (inputs[1].ToLower().StartsWith("to"))
+                            {
+                                this.Rcpt(context, inputLine.Substring(inputLine.IndexOf(" ")));
+                                break;
+                            }
+
+                            context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
+                            break;
+                        case "data":
+                            this.Data(context);
+                            break;
+                        case "auth":
+                            context.WriteLine("235 Authentication successful.");
+                            break;
+                        default:
+                            context.WriteLine(MESSAGE_UNKNOWN_COMMAND);
+                            break;
                     }
                 }
                 catch (Exception ex)

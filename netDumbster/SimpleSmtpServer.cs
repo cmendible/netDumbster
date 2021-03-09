@@ -7,6 +7,7 @@ namespace netDumbster.smtp
     using System.Collections.Concurrent;
     using System.Net;
     using System.Net.Sockets;
+    using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
     using netDumbster.smtp.Logging;
@@ -218,6 +219,11 @@ namespace netDumbster.smtp
         {
             this.log.Info("Starting Smtp server");
 
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && this.Configuration.Port < 1000)
+            {
+                log.Warn($"POSIX system detected. Root access may be needed to open port: {this.Configuration.Port}.");
+            }
+
             IPEndPoint endPoint = new IPEndPoint(this.Configuration.IPAddress, this.Configuration.Port);
             this.tcpListener = new TcpListener(endPoint);
 
@@ -234,7 +240,6 @@ namespace netDumbster.smtp
             this.ServerReady.Set();
             try
             {
-
                 Task.Factory.StartNew(async () =>
                    {
                        while (this.tcpListener.Server.IsBound)

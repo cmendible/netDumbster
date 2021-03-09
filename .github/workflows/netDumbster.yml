@@ -5,7 +5,7 @@ jobs:
     name: Build
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - name: Check out code
@@ -14,7 +14,7 @@ jobs:
       - name: Setup .NET Core
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 3.1.x
+          dotnet-version: 5.0.x
 
       - name: Build
         run: dotnet build

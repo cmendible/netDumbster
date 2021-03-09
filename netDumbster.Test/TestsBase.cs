@@ -4,14 +4,14 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Net;
-    using System.Net.Mail;
-    using System.Net.Mime;
     using System.Text;
     using netDumbster.smtp;
     using netDumbster.smtp.Logging;
     using Xunit;
     using System.Threading.Tasks;
     using System.Net.Sockets;
+    using MailKit.Net.Smtp;
+    using MimeKit;
 
     public class TestsBase : IDisposable
     {
@@ -89,23 +89,36 @@
             fixedPortServer.Stop();
         }
 
-        // Test is run several several times since we're testing asynchronous behaviour
-        [Theory]
-        [Repeat(5)]
+        [Fact]
         public void Send_Email_When_Server_Not_Running()
         {
             this.server.Stop();
-            Assert.Throws<SmtpException>(() => this.SendMail());
+            var ex = Record.Exception(() => this.SendMail());
+            Assert.IsAssignableFrom<SocketException>(ex);
         }
 
         [Fact]
         public void Send_Email_With_AlternateViews()
         {
-            using (var client = new SmtpClient("localhost", this.server.Configuration.Port))
+            using (SmtpClient client = new SmtpClient())
             {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
-                mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
-                client.Send(mailMessage);
+                client.Connect("localhost", this.server.Configuration.Port, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
+
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "test";
+
+                var builder = new BodyBuilder();
+                builder.TextBody = "this is the body";
+                builder.HtmlBody = "FooBar";
+
+                message.Body = builder.ToMessageBody();
+
+                client.Send(message);
             }
 
             Assert.Equal(1, this.server.ReceivedEmailCount);
@@ -121,14 +134,29 @@
         [Fact]
         public void Send_Email_With_AlternateViews_And_Attachments()
         {
-            using (var client = new SmtpClient("localhost", this.server.Configuration.Port))
+            using (SmtpClient client = new SmtpClient())
             {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
-                mailMessage.AlternateViews.Add(AlternateView.CreateAlternateViewFromString("FooBar", new ContentType("text/html")));
-                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment1", new ContentType("application/octet-stream")));
-                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment2", new ContentType("application/octet-stream")));
-                mailMessage.Attachments.Add(Attachment.CreateAttachmentFromString("Attachment3", new ContentType("application/octet-stream")));
-                client.Send(mailMessage);
+                client.Connect("localhost", this.server.Configuration.Port, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
+
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "test";
+
+                var builder = new BodyBuilder();
+                builder.TextBody = "this is the body";
+                builder.HtmlBody = "FooBar";
+
+                builder.Attachments.Add("Attachment1", System.Text.Encoding.UTF8.GetBytes("Attachment1"), ContentType.Parse("application/octet-stream"));
+                builder.Attachments.Add("Attachment2", System.Text.Encoding.UTF8.GetBytes("Attachment2"), ContentType.Parse("application/octet-stream"));
+                builder.Attachments.Add("Attachment3", System.Text.Encoding.UTF8.GetBytes("Attachment3"), ContentType.Parse("application/octet-stream"));
+
+                message.Body = builder.ToMessageBody();
+
+                client.Send(message);
             }
 
             Assert.Equal(1, this.server.ReceivedEmailCount);
@@ -159,11 +187,23 @@
         {
             var expectedBody = $"this is the body{Environment.NewLine}line2{Environment.NewLine}line3";
 
-            using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
+            using (SmtpClient client = new SmtpClient())
             {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", expectedBody);
-                mailMessage.IsBodyHtml = false;
-                client.Send(mailMessage);
+                client.Connect("localhost", this.server.Configuration.Port, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
+
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "test";
+
+                var builder = new BodyBuilder();
+                builder.TextBody = expectedBody;
+
+                message.Body = builder.ToMessageBody();
+                client.Send(message);
             }
 
             Assert.Equal(1, this.server.ReceivedEmailCount);
@@ -173,17 +213,28 @@
         [Fact]
         public void Send_Email_With_Priority()
         {
-            using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
+            using (SmtpClient client = new SmtpClient())
             {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
-                mailMessage.IsBodyHtml = false;
-                mailMessage.Priority = MailPriority.High;
-                client.Send(mailMessage);
+                client.Connect("localhost", this.server.Configuration.Port, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
+
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "test";
+                message.Body = new TextPart("plain") { Text = "this is the body" };
+                message.Priority = MessagePriority.Urgent;
+                message.XPriority = XMessagePriority.Highest;
+                message.Importance = MessageImportance.High;
+
+                client.Send(message);
             }
 
             Assert.Equal(1, this.server.ReceivedEmailCount);
             Assert.Equal("this is the body", this.server.ReceivedEmail[0].MessageParts[0].BodyData);
-            Assert.Equal("1", this.server.ReceivedEmail[0].XPriority);
+            Assert.Equal("1 (Highest)", this.server.ReceivedEmail[0].XPriority);
             Assert.Equal("urgent", this.server.ReceivedEmail[0].Priority);
             Assert.Equal("high", this.server.ReceivedEmail[0].Importance);
         }
@@ -192,17 +243,30 @@
         public void Send_Email_With_RussianText()
         {
             string body = string.Empty;
-            using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
+            using (SmtpClient client = new SmtpClient())
             {
+                client.Connect("localhost", this.server.Configuration.Port, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
+
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "test";
+
+                var builder = new BodyBuilder();
                 body = "Съешь ещё этих мягких французских булок, да выпей чаю" +
                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
                        "Съешь ещё этих мягких французских булок, да выпей чаю" +
                        "Съешь ещё этих мягких французских булок, да выпей чаю";
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", body);
-                mailMessage.IsBodyHtml = false;
-                client.Send(mailMessage);
+                builder.TextBody = body;
+
+                message.Body = builder.ToMessageBody();
+
+                client.Send(message);
             }
 
             Assert.Equal(1, this.server.ReceivedEmailCount);
@@ -215,12 +279,25 @@
         public void Send_Email_With_UTF8_Chars()
         {
             string body = string.Empty;
-            using (SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port))
+            using (SmtpClient client = new SmtpClient())
             {
+                client.Connect("localhost", this.server.Configuration.Port, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
+
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "test";
+
+                var builder = new BodyBuilder();
                 body = "µ¶®¥§";
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", body);
-                mailMessage.IsBodyHtml = false;
-                client.Send(mailMessage);
+                builder.TextBody = body;
+
+                message.Body = builder.ToMessageBody();
+
+                client.Send(message);
             }
 
             Assert.Equal(1, this.server.ReceivedEmailCount);
@@ -232,7 +309,7 @@
         [Fact]
         public void Send_Fires_Message_Received_Event()
         {
-            int port = 50004;
+            int port = GetRandomUnusedPort();
             SimpleSmtpServer fixedPortServer = this.StartServer(port);
             fixedPortServer.MessageReceived += (sender, args) =>
             {
@@ -269,14 +346,42 @@
             var host = "localhost";
             using (SimpleSmtpServer emailServer = this.StartServer(port))
             {
-                SmtpClient client = new SmtpClient(host, port);
-                client.Send("noone@nowhere.com", "nobody@nowhere.com", "This is an email", "body of email");
+                var client = new SmtpClient();
+                client.Connect(host, port, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
+
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "This is an email";
+                var builder = new BodyBuilder();
+                builder.TextBody = "body of email";
+                message.Body = builder.ToMessageBody();
+
+                client.Send(message);
             }
 
             using (SimpleSmtpServer emailServer = this.StartServer(port))
             {
-                using (SmtpClient client = new SmtpClient(host, port))
-                    client.Send("noone@nowhere.com", "nobody@nowhere.com", "This is an email", "body of email");
+                using (SmtpClient client = new SmtpClient())
+                {
+                    client.Connect(host, port, false);
+                    var from = new MailboxAddress("carlos@netdumbster.com");
+                    var to = new MailboxAddress("karina@netdumbster.com");
+
+                    var message = new MimeMessage();
+
+                    message.From.Add(from);
+                    message.To.Add(to);
+                    message.Subject = "This is an email";
+                    var builder = new BodyBuilder();
+                    builder.TextBody = "body of email";
+                    message.Body = builder.ToMessageBody();
+
+                    client.Send(message);
+                }
             }
         }
 
@@ -313,7 +418,7 @@
             SendMail(false, files);
             Assert.Equal(files.Length, this.server.ReceivedEmailCount);
             var smtpMail = this.server.ReceivedEmail[0];
-            using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(new System.IO.StringReader(smtpMail.Data)))
+            using (var mailMessage = MailMessageMimeParser.ParseMessage(new System.IO.StringReader(smtpMail.Data)))
             {
                 foreach (var m in mailMessage.Attachments)
                 {
@@ -328,18 +433,24 @@
         {
             var config = Configuration.Configure();
             using var server = SimpleSmtpServer.Start(config.WithRandomPort().Port);
-            var mailClient = new SmtpClient
-            {
-                Host = "localhost",
-                Port = server.Configuration.Port,
-                EnableSsl = false
-            };
+            SmtpClient client = new SmtpClient();
+            client.Connect("localhost", server.Configuration.Port, false);
+
+            var from = new MailboxAddress("carlos@netdumbster.com");
+            var to = new MailboxAddress("karina@netdumbster.com");
+
+            var message = new MimeMessage();
+
+            message.From.Add(from);
+            message.To.Add(to);
+            message.Subject = "This is an email";
+            var builder = new BodyBuilder();
+            builder.TextBody = "body of email";
+            message.Body = builder.ToMessageBody();
 
             for (int messageNo = 0; messageNo < 2; messageNo++)
             {
-                var mailMessage = new MailMessage("one@example.com", "two@example.com");
-
-                await mailClient.SendMailAsync(mailMessage);
+                await client.SendAsync(message);
 
                 Assert.Equal(messageNo + 1, server.ReceivedEmailCount);
             }
@@ -362,50 +473,73 @@
 
         protected void SendMail(bool smtpAuth, bool isBodyHtml, byte[] attachment, int serverPort)
         {
-            using (SmtpClient client = new SmtpClient("localhost", serverPort))
+            using (SmtpClient client = new SmtpClient())
             {
-                var mailMessage = new MailMessage("carlos@mendible.com", "karina@mendible.com", "test", "this is the body");
-                mailMessage.Bcc.Add(new MailAddress("bcc@mendible.com"));
-                mailMessage.CC.Add(new MailAddress("cc@mendible.com"));
-                mailMessage.IsBodyHtml = isBodyHtml;
+                client.Connect("localhost", serverPort, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
 
-                if (isBodyHtml)
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "test";
+
+                var builder = new BodyBuilder();
+                if (!isBodyHtml)
                 {
-                    mailMessage.Body = "this is the html body";
+                    builder.TextBody = "this is the body";
                 }
-
-                if (smtpAuth)
+                else
                 {
-                    NetworkCredential credentials = new NetworkCredential("user", "pwd");
-                    client.Credentials = credentials;
-                    client.EnableSsl = false;
+                    builder.HtmlBody = "this is the html body";
                 }
 
                 if (attachment != null)
                 {
-                    mailMessage.Attachments.Add(new Attachment(new MemoryStream(attachment), "image/jpeg"));
+                    builder.Attachments.Add("image", new MemoryStream(attachment), ContentType.Parse("image/jpeg"));
                 }
 
-                client.Send(mailMessage);
+                message.Body = builder.ToMessageBody();
+
+                if (smtpAuth)
+                {
+                    client.Authenticate("userName", "Password");
+                }
+
+                client.Send(message);
             }
         }
 
         protected void SendMail(bool smtpAuth, IEnumerable<string> attach)
         {
-            SmtpClient client = new SmtpClient("localhost", this.server.Configuration.Port);
-            var mailMessage = new MailMessage("cfm@mendible.com", "kbm@mendible.com", "test", "test test test");
-            foreach (var fileName in attach)
-                mailMessage.Attachments.Add(new Attachment(fileName));
-
-            if (smtpAuth)
+            using (SmtpClient client = new SmtpClient())
             {
-                NetworkCredential credentials = new NetworkCredential("user", "pwd");
-                client.Credentials = credentials;
-                client.EnableSsl = false;
-            }
-            client.Send(mailMessage);
+                client.Connect("localhost", this.server.Configuration.Port, false);
+                var from = new MailboxAddress("carlos@netdumbster.com");
+                var to = new MailboxAddress("karina@netdumbster.com");
 
-            client.Dispose();
+                var message = new MimeMessage();
+                message.From.Add(from);
+                message.To.Add(to);
+                message.Subject = "test";
+
+                var builder = new BodyBuilder();
+                builder.TextBody = "this is the body";
+
+                foreach (var fileName in attach)
+                    builder.Attachments.Add(fileName);
+
+                if (smtpAuth)
+                {
+                    NetworkCredential credentials = new NetworkCredential("user", "pwd");
+                    client.Authenticate(credentials);
+                }
+
+                message.Body = builder.ToMessageBody();
+
+                client.Send(message);
+            }
         }
 
         private bool disposedValue = false; // To detect redundant calls
