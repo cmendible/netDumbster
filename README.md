@@ -1,9 +1,9 @@
 ![dotnetcore](https://github.com/cmendible/netDumbster/workflows/dotnetcore/badge.svg)
 
 # netDumbster 
-is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)
+**netDumbster** is a .Net Fake SMTP Server clone of the popular **Dumbster**.
 
-netDumbster is based on the API of nDumbster (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
+**netDumbster** is based on the API of **nDumbster** (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
 
 License: http://www.apache.org/licenses/LICENSE-2.0.html
 
