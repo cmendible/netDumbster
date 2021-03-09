@@ -302,7 +302,7 @@
         [Fact]
         public void Send_Fires_Message_Received_Event()
         {
-            int port = 50004;
+            int port = GetRandomUnusedPort();
             SimpleSmtpServer fixedPortServer = this.StartServer(port);
             fixedPortServer.MessageReceived += (sender, args) =>
             {
