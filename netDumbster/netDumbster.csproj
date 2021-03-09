@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>2.0.0.7</Version>
     <Authors>Carlos Mendible</Authors>
     <Company>Hexasystems Inc.</Company>
     <PackageId>netDumbster</PackageId>
@@ -12,7 +11,7 @@
     <PackageTags>SMTP Tools UnitTest Fake</PackageTags>
     <Description>netDumbster is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)
 	netDumbster is based on the API of nDumbster (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
-	  </Description>
+    </Description>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <AssemblyOriginatorKeyFile>netDumbster.snk</AssemblyOriginatorKeyFile>
@@ -22,9 +21,19 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
+  <!-- Configure properties for MinVer -->
+  <PropertyGroup>
+    <MinVerTagPrefix>v.</MinVerTagPrefix>
+    <MinVerDefaultPreReleasePhase>rc</MinVerDefaultPreReleasePhase>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="all" />
     <PackageReference Include="MimeKit" Version="2.5.1" />
+    <PackageReference Include="MinVer" Version="2.4.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
-  
+
 </Project>
