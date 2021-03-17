@@ -122,11 +122,10 @@ namespace Extensions
         /// <param name="message">The message.</param>
         public static MailMessage ConvertToMailMessage(this MimeKit.MimeMessage message)
         {
-            if (message == null)
-                return null;
-
-            var from = message.From.Mailboxes.FirstOrDefault();
             var msg = new MailMessage();
+            
+            var from = message.From.Mailboxes.FirstOrDefault();
+            
             var sender = message.Sender;
 
             foreach (var header in message.Headers)

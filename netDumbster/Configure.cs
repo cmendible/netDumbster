@@ -73,7 +73,7 @@
         /// <returns></returns>
         public SimpleSmtpServer Build()
         {
-            Configuration config = this;
+            var config = this;
             if (this.Port == 0)
             {
                 config = this.WithRandomPort();

@@ -35,7 +35,7 @@ namespace netDumbster.smtp
         /// <summary>
         /// TCP Listener
         /// </summary>
-        private TcpListener tcpListener;
+        private TcpListener? tcpListener;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SimpleSmtpServer"/> class.
@@ -62,7 +62,7 @@ namespace netDumbster.smtp
             this.ServerReady = new AutoResetEvent(false);
         }
 
-        public event EventHandler<MessageReceivedArgs> MessageReceived;
+        public event EventHandler<MessageReceivedArgs>? MessageReceived;
 
         /// <summary>
         /// Gets the configuration.
@@ -224,7 +224,7 @@ namespace netDumbster.smtp
                 log.Warn($"POSIX system detected. Root access may be needed to open port: {this.Configuration.Port}.");
             }
 
-            IPEndPoint endPoint = new IPEndPoint(this.Configuration.IPAddress, this.Configuration.Port);
+            var endPoint = new IPEndPoint(this.Configuration.IPAddress, this.Configuration.Port);
             this.tcpListener = new TcpListener(endPoint);
 
             // Fix the problem with the scenario if the server is stopped, and then
@@ -244,7 +244,7 @@ namespace netDumbster.smtp
                    {
                        while (this.tcpListener.Server.IsBound)
                        {
-                           Socket socket = await this.tcpListener.AcceptSocketAsync();
+                           var socket = await this.tcpListener.AcceptSocketAsync();
                            if (socket == null)
                            {
                                break;
@@ -279,7 +279,7 @@ namespace netDumbster.smtp
                 using (socket)
                 {
                     this.log.Debug("Socket accepted and ready to be processed.");
-                    SmtpProcessor processor = new SmtpProcessor(string.Empty, this.Configuration.UseMessageStore ? this.smtpMessageStore : null);
+                    var processor = new SmtpProcessor(string.Empty, this.Configuration.UseMessageStore ? this.smtpMessageStore : null);
                     processor.MessageReceived += (sender, args) =>
                     {
                         if (MessageReceived != null)

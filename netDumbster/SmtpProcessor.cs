@@ -65,22 +65,23 @@ namespace netDumbster.smtp
         /// <summary>
         /// Context holding refenrece to Socket
         /// </summary>
-        SmtpContext context;
+        SmtpContext? context;
 
         /// <summary>Domain name for this server.</summary>
-        private string domain;
+        private string domain = string.Empty;
 
         /// <summary>The response to the HELO command.</summary>
-        private string heloResponse;
+        private string heloResponse = string.Empty;
+
         private ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// List of received messages (emails).
         /// </summary>
-        ConcurrentBag<SmtpMessage> smtpMessageStore;
+        ConcurrentBag<SmtpMessage>? smtpMessageStore;
 
         /// <summary>The message to display to the client when they first connect.</summary>
-        private string welcomeMessage;
+        private string welcomeMessage = string.Empty;
 
         /// <summary>
         /// Initializes the SMTPProcessor with the appropriate
@@ -93,13 +94,13 @@ namespace netDumbster.smtp
         /// be a valid domain name, but it will be included in the Welcome Message
         /// and HELO response.
         /// </param>
-        public SmtpProcessor(string domain, ConcurrentBag<SmtpMessage> smtpMessageStore)
+        public SmtpProcessor(string domain, ConcurrentBag<SmtpMessage>? smtpMessageStore)
         {
             this.smtpMessageStore = smtpMessageStore;
             this.Initialize(domain);
         }
 
-        public event EventHandler<MessageReceivedArgs> MessageReceived;
+        public event EventHandler<MessageReceivedArgs>? MessageReceived;
 
         /// <summary>
         /// The response to the HELO command.  This response should
@@ -177,10 +178,10 @@ namespace netDumbster.smtp
         {
             context.WriteLine(MESSAGE_START_DATA);
 
-            RawSmtpMessage rawSmtpMessage = context.Message;
+            var rawSmtpMessage = context.Message;
 
-            IPEndPoint clientEndPoint = (IPEndPoint)context.Socket.RemoteEndPoint;
-            StringBuilder header = new StringBuilder();
+            var clientEndPoint = (IPEndPoint)context.Socket.RemoteEndPoint;
+            var header = new StringBuilder();
             header.Append(string.Format("Received: from ({0} [{1}])", context.ClientDomain, clientEndPoint.Address));
             header.Append("\r\n");
             header.Append("     " + System.DateTime.Now);
@@ -190,8 +191,8 @@ namespace netDumbster.smtp
 
             header.Length = 0;
 
-            string line = context.ReadLine();
-            while (!line.Equals("."))
+            var line = context.ReadLine();
+            while (line is not null && !line.Equals("."))
             {
                 rawSmtpMessage.Data.Append(line);
                 rawSmtpMessage.Data.Append("\r\n");
@@ -199,17 +200,18 @@ namespace netDumbster.smtp
             }
 
             // Spool the message
-            lock (this.smtpMessageStore)
+            if (this.smtpMessageStore is not null)
             {
-                SmtpMessage smtpMessage = new SmtpMessage(rawSmtpMessage);
-                if (this.smtpMessageStore != null)
+                lock (this.smtpMessageStore)
                 {
-                    this.smtpMessageStore.Add(smtpMessage);
-                }
+                    var smtpMessage = new SmtpMessage(rawSmtpMessage);
 
-                if (this.MessageReceived != null)
-                {
-                    this.MessageReceived(this, new MessageReceivedArgs(smtpMessage));
+                    this.smtpMessageStore.Add(smtpMessage);
+
+                    if (this.MessageReceived is not null)
+                    {
+                        this.MessageReceived(this, new MessageReceivedArgs(smtpMessage));
+                    }
                 }
             }
 
@@ -260,11 +262,11 @@ namespace netDumbster.smtp
         /// </summary>
         private void Mail(SmtpContext context, string argument)
         {
-            bool addressValid = false;
+            var addressValid = false;
             if (context.LastCommand == COMMAND_HELO)
             {
-                string address = this.ParseAddress(argument);
-                if (address != null)
+                var address = this.ParseAddress(argument);
+                if (!string.IsNullOrEmpty(address))
                 {
                     try
                     {
@@ -298,11 +300,10 @@ namespace netDumbster.smtp
         /// </summary>
         private string ParseAddress(string input)
         {
-            Match match = ADDRESS_REGEX.Match(input);
-            string matchText;
+            var match = ADDRESS_REGEX.Match(input);
             if (match.Success)
             {
-                matchText = match.Value;
+                var matchText = match.Value;
 
                 // Trim off the :< chars
                 matchText = matchText.Remove(0, 1);
@@ -313,7 +314,7 @@ namespace netDumbster.smtp
                 return matchText;
             }
 
-            return null;
+            return string.Empty;
         }
 
         /// <summary>
@@ -322,15 +323,14 @@ namespace netDumbster.smtp
         /// </summary>
         private void ProcessCommands(SmtpContext context)
         {
-            bool isRunning = true;
-            string inputLine;
+            var isRunning = true;
 
             // Loop until the client quits.
             while (isRunning)
             {
                 try
                 {
-                    inputLine = context.ReadLine();
+                    var inputLine = context.ReadLine();
                     if (inputLine == null)
                     {
                         isRunning = false;
@@ -346,7 +346,7 @@ namespace netDumbster.smtp
                         case "helo":
                             this.Helo(context, inputs);
                             break;
-                        case "ehlo":                           
+                        case "ehlo":
                             context.WriteLine("250-{inputs[1]}");
                             context.WriteLine("250 AUTH PLAIN");
                             context.LastCommand = COMMAND_HELO;
@@ -391,18 +391,18 @@ namespace netDumbster.smtp
                             break;
                     }
                 }
-                catch (Exception ex)
+                catch (SocketException sx)
                 {
-                    SocketException sx = ex as SocketException;
-
-                    if (sx != null && sx.ErrorCode == 10060)
+                    if (sx.ErrorCode == 10060)
                     {
                         context.WriteLine(MESSAGE_GOODBYE);
                     }
 
-                    // else
-                    //    context.WriteLine(MESSAGE_SYSTEM_ERROR);
-
+                    isRunning = false;
+                    context.Socket.Dispose();
+                }
+                catch (Exception)
+                {
                     isRunning = false;
                     context.Socket.Dispose();
                 }
@@ -416,12 +416,12 @@ namespace netDumbster.smtp
         {
             if (context.LastCommand == COMMAND_MAIL || context.LastCommand == COMMAND_RCPT)
             {
-                string address = this.ParseAddress(argument);
-                if (address != null)
+                var address = this.ParseAddress(argument);
+                if (!string.IsNullOrEmpty(address))
                 {
                     try
                     {
-                        EmailAddress emailAddress = new EmailAddress(address);
+                        var emailAddress = new EmailAddress(address);
                         context.Message.AddRecipient(emailAddress);
                         context.LastCommand = COMMAND_RCPT;
                         context.WriteLine(MESSAGE_OK);

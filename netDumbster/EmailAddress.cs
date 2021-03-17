@@ -19,9 +19,7 @@ namespace netDumbster.smtp
     /// </remarks>
     public class EmailAddress
     {
-        private string domain;
-        private Regex ILLEGAL_CHARACTERS = new Regex( "[][)(@><\\\",;:]");
-        private string username;
+        private Regex ILLEGAL_CHARACTERS = new Regex("[][)(@><\\\",;:]");
 
         /// <summary>
         /// Creates a new EmailAddress using a valid address.
@@ -31,7 +29,21 @@ namespace netDumbster.smtp
         /// </exception>
         public EmailAddress(string address)
         {
-            this.Address = address;
+            if (string.IsNullOrEmpty(address))
+            {
+                throw new InvalidEmailAddressException("Invalid address.  Specified address is empty");
+            }
+
+            string[] addressParts = address.Split("@".ToCharArray());
+            if (addressParts.Length != 2)
+            {
+                throw new InvalidEmailAddressException("Invalid address.  The address must be formatted as: username@domain.");
+            }
+
+            this.Username = addressParts[0];
+            this.Domain = addressParts[1];
+
+            ValidateAddress(this.Username, this.Domain);
         }
 
         /// <summary>
@@ -44,6 +56,8 @@ namespace netDumbster.smtp
         {
             this.Username = username;
             this.Domain = domain;
+            
+            ValidateAddress(this.Username, this.Domain);
         }
 
         /// <summary>
@@ -56,28 +70,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                return this.username + "@" + this.domain;
-            }
-
-            set
-            {
-                // Verify it isn't null/empty.
-                if (value == null || value.Length == 0)
-                {
-                    throw new InvalidEmailAddressException( "Invalid address.  Specified address is empty");
-                }
-
-                string[] addressParts = value.Split("@".ToCharArray());
-                if (addressParts.Length != 2)
-                {
-                    throw new InvalidEmailAddressException( "Invalid address.  The address must be formatted as: username@domain.");
-                }
-
-                // Store the individual parts.  These methods will
-                // verify that the individual parts are valid or will
-                // throw their own InvalidEmailAddressException
-                this.Username = addressParts[0];
-                this.Domain = addressParts[1];
+                return this.Username + "@" + this.Domain;
             }
         }
 
@@ -90,23 +83,7 @@ namespace netDumbster.smtp
         /// </exception>
         public string Domain
         {
-            get
-            {
-                return this.domain;
-            }
-
-            set
-            {
-                if (value == null || value.Length < 5)
-                {
-                    throw new InvalidEmailAddressException( "Invalid domian.  Domain must be at least 5 charecters (a.com, a.edu, etc...)");
-                }
-
-                // Verify that the username does not contain illegal characters.
-                this.VerifySpecialCharacters(value);
-
-                this.domain = value;
-            }
+            get;
         }
 
         /// <summary>
@@ -118,23 +95,7 @@ namespace netDumbster.smtp
         /// </exception>
         public string Username
         {
-            get
-            {
-                return this.username;
-            }
-
-            set
-            {
-                if (value == null || value.Length == 0)
-                {
-                    throw new InvalidEmailAddressException( "Invalid username.  Username must be at least one charecter");
-                }
-
-                // Verify that the username does not contain illegal characters.
-                this.VerifySpecialCharacters(value);
-
-                this.username = value;
-            }
+            get;
         }
 
         /// <summary>
@@ -160,6 +121,24 @@ namespace netDumbster.smtp
             {
                 throw new InvalidEmailAddressException("Invalid address.  The username and domain address parts can not contain any of the following characters: ( ) < > @ , ; : \\ \" . [ ]");
             }
+        }
+
+        private void ValidateAddress(string username, string domain)
+        {
+            if (string.IsNullOrEmpty(username))
+            {
+                throw new InvalidEmailAddressException("Invalid username.  Username must be at least one charecter");
+            }
+            // Verify that the username does not contain illegal characters.
+            this.VerifySpecialCharacters(username);
+
+            if (domain == null || domain.Length < 5)
+            {
+                throw new InvalidEmailAddressException("Invalid domain.  Domain must be at least 5 charecters (a.com, a.edu, etc...)");
+            }
+
+            // Verify that the domain does not contain illegal characters.
+            this.VerifySpecialCharacters(domain);
         }
     }
 }

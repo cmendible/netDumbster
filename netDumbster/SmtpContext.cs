@@ -7,7 +7,6 @@ namespace netDumbster.smtp
     using System.Net;
     using System.Net.Sockets;
     using System.Text;
-
     using netDumbster.smtp.Logging;
 
     /// <summary>
@@ -21,9 +20,6 @@ namespace netDumbster.smtp
     {
         private const string EOL = "\r\n";
 
-        /// <summary>The client domain, as specified by the helo command.</summary>
-        private string clientDomain;
-
         /// <summary>Encoding to use to send/receive data from the socket.</summary>
         private Encoding encoding;
 
@@ -35,16 +31,10 @@ namespace netDumbster.smtp
         /// </summary>
         private StringBuilder inputBuffer;
 
-        /// <summary>Last successful command received.</summary>
-        private int lastCommand;
         IPEndPoint localEndPoint;
 
-        /// <summary>The incoming message.</summary>
-        private RawSmtpMessage rawSmtpMessage;
         IPEndPoint remoteEndPoint;
 
-        /// <summary>The socket to the client.</summary>
-        private Socket socket;
         ILog _Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
@@ -52,8 +42,9 @@ namespace netDumbster.smtp
         /// </summary>
         public SmtpContext(Socket socket)
         {
-            this.lastCommand = -1;
-            this.socket = socket;
+            this.ClientDomain = string.Empty;
+            this.LastCommand = -1;
+            this.Socket = socket;
 
             // Set the encoding to ASCII.
             this.encoding = Encoding.ASCII;
@@ -61,10 +52,10 @@ namespace netDumbster.smtp
             // Initialize the input buffer
             this.inputBuffer = new StringBuilder();
 
-            this.remoteEndPoint = socket.RemoteEndPoint as IPEndPoint;
-            this.localEndPoint = socket.LocalEndPoint as IPEndPoint;
+            this.remoteEndPoint = (IPEndPoint)socket.RemoteEndPoint;
+            this.localEndPoint = (IPEndPoint)socket.LocalEndPoint;
 
-            this.rawSmtpMessage = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
+            this.Message = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
         }
 
         /// <summary>
@@ -72,15 +63,7 @@ namespace netDumbster.smtp
         /// </summary>
         public string ClientDomain
         {
-            get
-            {
-                return this.clientDomain;
-            }
-
-            set
-            {
-                this.clientDomain = value;
-            }
+            get; set;
         }
 
         /// <summary>
@@ -88,15 +71,7 @@ namespace netDumbster.smtp
         /// </summary>
         public int LastCommand
         {
-            get
-            {
-                return this.lastCommand;
-            }
-
-            set
-            {
-                this.lastCommand = value;
-            }
+            get; set;
         }
 
         /// <summary>
@@ -104,15 +79,7 @@ namespace netDumbster.smtp
         /// </summary>
         public RawSmtpMessage Message
         {
-            get
-            {
-                return this.rawSmtpMessage;
-            }
-
-            set
-            {
-                this.rawSmtpMessage = value;
-            }
+            get; private set;
         }
 
         /// <summary>
@@ -120,10 +87,7 @@ namespace netDumbster.smtp
         /// </summary>
         public Socket Socket
         {
-            get
-            {
-                return this.socket;
-            }
+            get;
         }
 
         /// <summary>
@@ -133,7 +97,7 @@ namespace netDumbster.smtp
         {
             this._Log.Debug("Closing SmtpContext.");
             this.inputBuffer.Length = 0;
-            this.socket.Close();
+            this.Socket.Close();
             this._Log.Debug("SmtpContext Closed.");
         }
 
@@ -141,25 +105,25 @@ namespace netDumbster.smtp
         /// Reads an entire line from the socket.  This method
         /// will block until an entire line has been read.
         /// </summary>
-        public string ReadLine()
+        public string? ReadLine()
         {
             // If we already buffered another line, just return
             // from the buffer.
-            string output = this.ReadBuffer();
+            var output = this.ReadBuffer();
             if (output != null)
             {
                 return output;
             }
 
             // Otherwise, read more input.
-            byte[] byteBuffer = new byte[80];
+            var byteBuffer = new byte[80];
             int count;
 
             // Read from the socket until an entire line has been read.
             do
             {
                 // Read the input data.
-                count = this.socket.Receive(byteBuffer);
+                count = this.Socket.Receive(byteBuffer);
 
                 if (count == 0)
                 {
@@ -182,8 +146,8 @@ namespace netDumbster.smtp
         {
             this._Log.Debug("Resetting SmtpContext.");
             this.inputBuffer.Length = 0;
-            this.rawSmtpMessage = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
-            this.lastCommand = SmtpProcessor.COMMAND_HELO;
+            this.Message = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
+            this.LastCommand = SmtpProcessor.COMMAND_HELO;
             this._Log.Debug("Done resetting SmtpContext.");
         }
 
@@ -195,7 +159,7 @@ namespace netDumbster.smtp
         /// <param name="data">The data to write the the client.</param>
         public void WriteLine(string data)
         {
-            this.socket.Send(this.encoding.GetBytes(data + EOL));
+            this.Socket.Send(this.encoding.GetBytes(data + EOL));
         }
 
         /// <summary>
@@ -203,16 +167,16 @@ namespace netDumbster.smtp
         /// the input buffer, or null if there is no line in the buffer.
         /// If a line is found, it will also be removed from the buffer.
         /// </summary>
-        private string ReadBuffer()
+        private string? ReadBuffer()
         {
             // If the buffer has data, check for a full line.
             if (this.inputBuffer.Length > 0)
             {
-                string buffer = this.inputBuffer.ToString();
-                int eolIndex = buffer.IndexOf(EOL);
+                var buffer = this.inputBuffer.ToString();
+                var eolIndex = buffer.IndexOf(EOL);
                 if (eolIndex != -1)
                 {
-                    string output = buffer.Substring(0, eolIndex);
+                    var output = buffer.Substring(0, eolIndex);
                     this.inputBuffer = new StringBuilder(buffer.Substring(eolIndex + 2));
                     return output;
                 }
