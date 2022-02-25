@@ -346,7 +346,7 @@ namespace netDumbster.smtp
                         case "helo":
                             this.Helo(context, inputs);
                             break;
-                        case "ehlo":                           
+                        case "ehlo":
                             context.WriteLine("250-{inputs[1]}");
                             context.WriteLine("250 AUTH PLAIN");
                             context.LastCommand = COMMAND_HELO;
@@ -399,6 +399,11 @@ namespace netDumbster.smtp
                     {
                         context.WriteLine(MESSAGE_GOODBYE);
                     }
+                    else
+                    {
+                        this.log.Error("Processing exception", ex);
+                    }
+
 
                     // else
                     //    context.WriteLine(MESSAGE_SYSTEM_ERROR);

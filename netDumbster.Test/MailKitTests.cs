@@ -47,6 +47,7 @@
             message.To.Add(to);
             message.Subject = "test";
             message.Body = new TextPart("plain") { Text = expectedBody };
+            message.Headers.Add("empty-value", string.Empty);
 
             client.Send(message);
 
