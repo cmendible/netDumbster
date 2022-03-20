@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5</TargetFramework>
+    <TargetFramework>net6</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -21,9 +21,9 @@
   </ItemGroup>
 
   <ItemGroup>
-  <Content Include="Content/A-RC’S_TEST´ÉÁÍ.html">
-   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-  </Content>
- </ItemGroup>
+    <Content Include="Content/A-RC’S_TEST´ÉÁÍ.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
 </Project>
