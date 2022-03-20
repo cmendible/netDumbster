@@ -103,8 +103,8 @@
             using (SmtpClient client = new SmtpClient())
             {
                 client.Connect("localhost", this.server.Configuration.Port, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
 
@@ -137,8 +137,8 @@
             using (SmtpClient client = new SmtpClient())
             {
                 client.Connect("localhost", this.server.Configuration.Port, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
 
@@ -190,8 +190,8 @@
             using (SmtpClient client = new SmtpClient())
             {
                 client.Connect("localhost", this.server.Configuration.Port, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
 
@@ -216,8 +216,8 @@
             using (SmtpClient client = new SmtpClient())
             {
                 client.Connect("localhost", this.server.Configuration.Port, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
 
@@ -246,8 +246,8 @@
             using (SmtpClient client = new SmtpClient())
             {
                 client.Connect("localhost", this.server.Configuration.Port, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
 
@@ -282,8 +282,8 @@
             using (SmtpClient client = new SmtpClient())
             {
                 client.Connect("localhost", this.server.Configuration.Port, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
 
@@ -348,8 +348,8 @@
             {
                 var client = new SmtpClient();
                 client.Connect(host, port, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
 
@@ -368,8 +368,8 @@
                 using (SmtpClient client = new SmtpClient())
                 {
                     client.Connect(host, port, false);
-                    var from = new MailboxAddress("carlos@netdumbster.com");
-                    var to = new MailboxAddress("karina@netdumbster.com");
+                    var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                    var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                     var message = new MimeMessage();
 
@@ -436,8 +436,8 @@
             SmtpClient client = new SmtpClient();
             client.Connect("localhost", server.Configuration.Port, false);
 
-            var from = new MailboxAddress("carlos@netdumbster.com");
-            var to = new MailboxAddress("karina@netdumbster.com");
+            var from = new MailboxAddress("from", "carlos@netdumbster.com");
+            var to = new MailboxAddress("to", "karina@netdumbster.com");
 
             var message = new MimeMessage();
 
@@ -476,8 +476,8 @@
             using (SmtpClient client = new SmtpClient())
             {
                 client.Connect("localhost", serverPort, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
 
@@ -516,8 +516,8 @@
             using (SmtpClient client = new SmtpClient())
             {
                 client.Connect("localhost", this.server.Configuration.Port, false);
-                var from = new MailboxAddress("carlos@netdumbster.com");
-                var to = new MailboxAddress("karina@netdumbster.com");
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new MailboxAddress("to", "karina@netdumbster.com");
 
                 var message = new MimeMessage();
                 message.From.Add(from);

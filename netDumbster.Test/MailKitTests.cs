@@ -38,8 +38,8 @@
             await client.ConnectAsync("localhost", _server.Configuration.Port, false).ConfigureAwait(false);
             client.AuthenticationMechanisms.Remove("XOAUTH2");
 
-            var from = new MailboxAddress("carlos@mendible.com");
-            var to = new MailboxAddress("karina@mendible.com");
+            var from = new MailboxAddress("from", "carlos@netdumbster.com");
+            var to = new MailboxAddress("to", "karina@netdumbster.com");
 
             var message = new MimeMessage();
 
