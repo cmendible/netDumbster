@@ -1,5 +1,3 @@
-using System;
-
 namespace Extensions
 {
     using System.IO;
@@ -132,7 +130,10 @@ namespace Extensions
             var sender = message.Sender;
 
             foreach (var header in message.Headers)
-                msg.Headers.Add(header.Field, string.IsNullOrWhiteSpace(header.Value) ? "<null>" : header.Value);
+            {
+                if (string.IsNullOrEmpty(header.Value)) continue;
+                msg.Headers.Add(header.Field, header.Value);
+            }
 
             if (sender != null)
                 msg.Sender = ConvertToMailAddress(sender);
