@@ -1,5 +1,7 @@
 name: dotnetcore
-on: [push]
+on:
+  push:
+  pull_request:
 jobs:
   build:
     name: Build
