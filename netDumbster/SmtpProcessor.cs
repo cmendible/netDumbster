@@ -397,6 +397,11 @@ namespace netDumbster.smtp
                     {
                         context.WriteLine(MESSAGE_GOODBYE);
                     }
+                    else
+                    {
+                        this.log.Error("Processing exception", sx);
+                    }
+
 
                     isRunning = false;
                     context.Socket.Dispose();
