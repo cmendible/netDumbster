@@ -28,7 +28,10 @@ namespace netDumbster.smtp
             {
                 this.Headers = mailMessage.Headers;
                 this.FromAddress = new EmailAddress(mailMessage.From.Address);
-                this.ToAddresses = rawSmtpMessage.Recipients.ToArray();
+                this.ReplyToAddresses = mailMessage.ReplyToList
+                    .Select(m => new EmailAddress(m.Address)).ToArray();
+                this.ToAddresses = mailMessage.To
+                    .Select(m => new EmailAddress(m.Address)).ToArray();
                 this.MessageParts = mailMessage.Parts();
                 this.LocalIPAddress = rawSmtpMessage.LocalIPAddress;
                 this.LocalPort = rawSmtpMessage.LocalPort;
@@ -158,6 +161,16 @@ namespace netDumbster.smtp
         /// delivered to.
         /// </summary>
         public EmailAddress[] ToAddresses
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// The addresses that this message will be
+        /// replied to.
+        /// </summary>
+        public EmailAddress[] ReplyToAddresses
         {
             get;
             private set;
