@@ -1,10 +1,9 @@
-﻿using System.Linq;
-
-namespace netDumbster.Test
+﻿namespace netDumbster.Test
 {
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Text;
     using netDumbster.smtp;
