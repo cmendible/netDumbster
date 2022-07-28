@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.IO;
+    using System.Linq;
     using System.Net;
     using System.Text;
     using netDumbster.smtp;
@@ -40,6 +41,47 @@
         {
             this.SendMail();
             Assert.Equal("test", this.server.ReceivedEmail[0].Subject);
+        }
+
+        [Fact]
+        public void Addresses_Are_Correct()
+        {
+            using (SmtpClient client = new SmtpClient())
+            {
+                client.Connect("localhost", this.server.Configuration.Port, false);
+                var from = new MailboxAddress("from", "carlos@netdumbster.com");
+                var to = new[]
+                {
+                    new MailboxAddress("to-1", "karina@netdumbster.com"),
+                    new MailboxAddress("to-2", "john@netdumbster.com"),
+                };
+                var replyTo = new[]
+                {
+                    new MailboxAddress("replyTo-1", "jane@netdumbster.com"),
+                    new MailboxAddress("replyTo-2", "edward@netdumbster.com"),
+                };
+
+                var message = new MimeMessage();
+
+                message.From.Add(from);
+                message.To.AddRange(to);
+                message.ReplyTo.AddRange(replyTo);
+                message.Subject = "test";
+
+                client.Send(message);
+
+                var receivedMessage = server.ReceivedEmail[0];
+
+                Assert.Equal(receivedMessage.FromAddress.Address, from.Address);
+                Assert.Equal(
+                    receivedMessage.ToAddresses.Select(a => a.Address),
+                    to.Select(a => a.Address)
+                );
+                Assert.Equal(
+                    receivedMessage.ReplyToAddresses.Select(a => a.Address),
+                    replyTo.Select(a => a.Address)
+                );
+            }
         }
 
         [Fact]
@@ -150,9 +192,12 @@
                 builder.TextBody = "this is the body";
                 builder.HtmlBody = "FooBar";
 
-                builder.Attachments.Add("Attachment1", System.Text.Encoding.UTF8.GetBytes("Attachment1"), ContentType.Parse("application/octet-stream"));
-                builder.Attachments.Add("Attachment2", System.Text.Encoding.UTF8.GetBytes("Attachment2"), ContentType.Parse("application/octet-stream"));
-                builder.Attachments.Add("Attachment3", System.Text.Encoding.UTF8.GetBytes("Attachment3"), ContentType.Parse("application/octet-stream"));
+                builder.Attachments.Add("Attachment1", System.Text.Encoding.UTF8.GetBytes("Attachment1"),
+                    ContentType.Parse("application/octet-stream"));
+                builder.Attachments.Add("Attachment2", System.Text.Encoding.UTF8.GetBytes("Attachment2"),
+                    ContentType.Parse("application/octet-stream"));
+                builder.Attachments.Add("Attachment3", System.Text.Encoding.UTF8.GetBytes("Attachment3"),
+                    ContentType.Parse("application/octet-stream"));
 
                 message.Body = builder.ToMessageBody();
 
