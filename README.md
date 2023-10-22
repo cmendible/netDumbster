@@ -11,7 +11,7 @@ License: http://www.apache.org/licenses/LICENSE-2.0.html
 
 Create a netDumbster Server instance:
 ````
-var server = SimpleSmtpServer.Start(port);
+using var server = SimpleSmtpServer.Start(port);
 ````
 
 Check received email count:
