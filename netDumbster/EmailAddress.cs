@@ -4,6 +4,7 @@
 
 namespace netDumbster.smtp
 {
+    using System.Collections.Generic;
     using System.Text.RegularExpressions;
 
     /// <summary>
@@ -139,6 +140,21 @@ namespace netDumbster.smtp
 
             // Verify that the domain does not contain illegal characters.
             VerifySpecialCharacters(domain);
+        }
+    }
+
+    public class EmailAddressComparer : IEqualityComparer<EmailAddress>
+    {
+        public bool Equals(EmailAddress? x, EmailAddress? y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (x is null || y is null) return false;
+            return x.Address == y.Address;
+        }
+
+        public int GetHashCode(EmailAddress obj)
+        {
+            return obj.Address != null ? obj.Address.GetHashCode() : 0;
         }
     }
 }

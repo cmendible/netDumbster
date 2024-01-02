@@ -33,8 +33,9 @@ namespace netDumbster.smtp
                 .Select(m => new EmailAddress(m.Address)).ToArray();
             CcAddresses = mailMessage.CC
                 .Select(m => new EmailAddress(m.Address)).ToArray();
-            BccAddresses = mailMessage.Bcc
-                .Select(m => new EmailAddress(m.Address)).ToArray();
+            // Bcc recipients are not part of the SMTP data object, so we need to calculate them
+            var comparer = new EmailAddressComparer();
+            BccAddresses = rawSmtpMessage.Recipients.Except(ToAddresses, comparer).Except(CcAddresses, comparer).ToArray();
             MessageParts = mailMessage.Parts();
             LocalIPAddress = rawSmtpMessage.LocalIPAddress;
             LocalPort = rawSmtpMessage.LocalPort;
@@ -77,7 +78,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("importance"))
+                if (Headers.AllKeys.SkipWhile(k => k is null).Select(k => k.ToLowerInvariant()).Contains("importance"))
                 {
                     return Headers["importance"].ToString();
                 }
@@ -120,7 +121,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("priority"))
+                if (Headers.AllKeys.SkipWhile(k => k is null).Select(k => k.ToLowerInvariant()).Contains("priority"))
                 {
                     return Headers["priority"].ToString();
                 }
@@ -202,7 +203,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("x-priority"))
+                if (Headers.AllKeys.SkipWhile(k => k is null).Select(k => k.ToLowerInvariant()).Contains("x-priority"))
                 {
                     return Headers["x-priority"].ToString();
                 }
