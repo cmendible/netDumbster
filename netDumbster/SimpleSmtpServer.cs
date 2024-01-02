@@ -20,17 +20,17 @@ namespace netDumbster.smtp
         /// <summary>
         /// Logger
         /// </summary>
-        ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        readonly ILog log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Stores all of the email received since this instance started up.
         /// </summary>
-        private ConcurrentBag<SmtpMessage> smtpMessageStore = new ConcurrentBag<SmtpMessage>();
+        private readonly ConcurrentBag<SmtpMessage> smtpMessageStore = [];
 
         /// <summary>
         ///  CancellationTokenSource to stop server
         /// </summary>
-        CancellationTokenSource cancellation = new CancellationTokenSource();
+        readonly CancellationTokenSource cancellation = new();
 
         /// <summary>
         /// TCP Listener
@@ -58,8 +58,8 @@ namespace netDumbster.smtp
 
         private SimpleSmtpServer(Configuration configuration)
         {
-            this.Configuration = configuration;
-            this.ServerReady = new AutoResetEvent(false);
+            Configuration = configuration;
+            ServerReady = new AutoResetEvent(false);
         }
 
         public event EventHandler<MessageReceivedArgs>? MessageReceived;
@@ -86,7 +86,7 @@ namespace netDumbster.smtp
             {
                 lock (this)
                 {
-                    return this.smtpMessageStore.ToArray();
+                    return [.. smtpMessageStore];
                 }
             }
         }
@@ -101,7 +101,7 @@ namespace netDumbster.smtp
             {
                 lock (this)
                 {
-                    return this.smtpMessageStore.Count;
+                    return smtpMessageStore.Count;
                 }
             }
         }
@@ -118,7 +118,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start()
         {
-            return SimpleSmtpServer.Start(Configuration.Configure().WithRandomPort());
+            return Start(Configuration.Configure().WithRandomPort());
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(bool useMessageStore)
         {
-            return SimpleSmtpServer.Start(Configuration.Configure().WithRandomPort().EnableMessageStore(useMessageStore));
+            return Start(Configuration.Configure().WithRandomPort().EnableMessageStore(useMessageStore));
         }
 
         /// <summary>
@@ -138,7 +138,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port)
         {
-            return SimpleSmtpServer.Start(port, true);
+            return Start(port, true);
         }
 
         /// <summary>
@@ -149,7 +149,7 @@ namespace netDumbster.smtp
         /// <returns></returns>
         public static SimpleSmtpServer Start(int port, bool useMessageStore)
         {
-            return SimpleSmtpServer.Start(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore));
+            return Start(Configuration.Configure().WithPort(port).EnableMessageStore(useMessageStore));
         }
 
         internal static SimpleSmtpServer Start(Configuration configuration)
@@ -167,10 +167,9 @@ namespace netDumbster.smtp
         {
             lock (this)
             {
-                SmtpMessage itemToRemove;
-                while (!this.smtpMessageStore.IsEmpty)
+                while (!smtpMessageStore.IsEmpty)
                 {
-                    this.smtpMessageStore.TryTake(out itemToRemove);
+                    smtpMessageStore.TryTake(out SmtpMessage itemToRemove);
                 }
             }
         }
@@ -181,34 +180,33 @@ namespace netDumbster.smtp
         /// </summary>
         public void Stop()
         {
-            this.log.Debug("Trying to stop SmtpServer.");
+            log.Debug("Trying to stop SmtpServer.");
 
             try
             {
                 lock (this)
                 {
-                    this.cancellation.Cancel();
+                    cancellation.Cancel();
 
                     // Kick the server accept loop
-                    if (this.tcpListener != null)
+                    if (tcpListener != null)
                     {
-                        // _processor.Stop();
-                        this.log.Debug("Stopping tcp listener.");
-                        this.tcpListener.Stop();
-                        this.log.Debug("Tcp listener stopped.");
+                        log.Debug("Stopping tcp listener.");
+                        tcpListener.Stop();
+                        log.Debug("Tcp listener stopped.");
                     }
 
-                    this.tcpListener = null;
+                    tcpListener = null;
                 }
             }
             catch (Exception ex)
             {
-                this.log.Warn("Unexpected Exception stopping SmtpServer", ex);
+                log.Warn("Unexpected Exception stopping SmtpServer", ex);
             }
             finally
             {
-                this.log.Debug("SmtpServer Stopped.");
-                this.ServerReady.Close();
+                log.Debug("SmtpServer Stopped.");
+                ServerReady.Close();
             }
         }
 
@@ -217,47 +215,47 @@ namespace netDumbster.smtp
         /// </summary>
         internal void StartListening()
         {
-            this.log.Info("Starting Smtp server");
+            log.Info("Starting Smtp server");
 
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && this.Configuration.Port < 1000)
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && Configuration.Port < 1000)
             {
-                log.Warn($"POSIX system detected. Root access may be needed to open port: {this.Configuration.Port}.");
+                log.Warn($"POSIX system detected. Root access may be needed to open port: {Configuration.Port}.");
             }
 
-            var endPoint = new IPEndPoint(this.Configuration.IPAddress, this.Configuration.Port);
-            this.tcpListener = new TcpListener(endPoint);
+            var endPoint = new IPEndPoint(Configuration.IPAddress, Configuration.Port);
+            tcpListener = new TcpListener(endPoint);
 
             // Fix the problem with the scenario if the server is stopped, and then
             // restarted with the same port, it will not throw an error.
-            if (this.Configuration.ReuseAddress)
+            if (Configuration.ReuseAddress)
             {
-                this.tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
+                tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, 1);
             }
-            this.tcpListener.Start();
+            tcpListener.Start();
 
-            this.log.DebugFormat("Started Tcp Listener at port {0}", this.Configuration.Port);
+            log.DebugFormat("Started Tcp Listener at port {0}", Configuration.Port);
 
-            this.ServerReady.Set();
+            ServerReady.Set();
             try
             {
                 Task.Factory.StartNew(async () =>
                    {
-                       while (this.tcpListener.Server.IsBound)
+                       while (tcpListener.Server.IsBound)
                        {
-                           var socket = await this.tcpListener.AcceptSocketAsync();
+                           var socket = await tcpListener.AcceptSocketAsync();
                            if (socket == null)
                            {
                                break;
                            }
 
-                           this.SocketHandler(socket);
+                           SocketHandler(socket);
                        }
                    },
                    cancellation.Token);
             }
             catch (Exception ex)
             {
-                this.log.Warn("Unexpected Exception starting the SmtpServer.", ex);
+                log.Warn("Unexpected Exception starting the SmtpServer.", ex);
             }
         }
 
@@ -267,19 +265,19 @@ namespace netDumbster.smtp
         /// <param name="result">The result.</param>
         private void SocketHandler(Socket socket)
         {
-            if (this.cancellation.IsCancellationRequested)
+            if (cancellation.IsCancellationRequested)
             {
                 return;
             }
 
-            this.log.Debug("Entering Socket Handler.");
+            log.Debug("Entering Socket Handler.");
 
             try
             {
                 using (socket)
                 {
-                    this.log.Debug("Socket accepted and ready to be processed.");
-                    var processor = new SmtpProcessor(string.Empty, this.Configuration.UseMessageStore ? this.smtpMessageStore : null);
+                    log.Debug("Socket accepted and ready to be processed.");
+                    var processor = new SmtpProcessor(string.Empty, Configuration.UseMessageStore ? smtpMessageStore : null);
                     processor.MessageReceived += (sender, args) =>
                     {
                         if (MessageReceived != null)
@@ -292,11 +290,11 @@ namespace netDumbster.smtp
             }
             catch (ObjectDisposedException ex)
             {
-                this.log.Warn("Object Disposed Exception. THIS IS EXPECTED ONLY IF SERVER WAS STOPPED.", ex);
+                log.Warn("Object Disposed Exception. THIS IS EXPECTED ONLY IF SERVER WAS STOPPED.", ex);
             }
             catch (SocketException ex)
             {
-                this.log.Warn("Socket Exception", ex);
+                log.Warn("Socket Exception", ex);
             }
         }
 

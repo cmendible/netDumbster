@@ -14,7 +14,7 @@ namespace netDumbster.smtp
     /// </summary>
     public class SmtpMessage
     {
-        private RawSmtpMessage rawSmtpMessage;
+        private readonly RawSmtpMessage rawSmtpMessage;
 
         /// <summary>
         /// Creates a new message.
@@ -24,21 +24,23 @@ namespace netDumbster.smtp
             this.rawSmtpMessage = rawSmtpMessage;
             var rawMessage = this.rawSmtpMessage.Data.ToString();
             rawMessage = rawMessage.TrimEnd('\r', '\n');
-            using (MailMessage mailMessage = MailMessageMimeParser.ParseMessage(rawMessage))
-            {
-                this.Headers = mailMessage.Headers;
-                this.FromAddress = new EmailAddress(mailMessage.From.Address);
-                this.ReplyToAddresses = mailMessage.ReplyToList
-                    .Select(m => new EmailAddress(m.Address)).ToArray();
-                this.ToAddresses = mailMessage.To
-                    .Select(m => new EmailAddress(m.Address)).ToArray();
-                this.MessageParts = mailMessage.Parts();
-                this.LocalIPAddress = rawSmtpMessage.LocalIPAddress;
-                this.LocalPort = rawSmtpMessage.LocalPort;
-                this.RemoteIPAddress = rawSmtpMessage.RemoteIPAddress;
-                this.RemotePort = rawSmtpMessage.RemotePort;
-                this.Subject = mailMessage.Subject;
-            }
+            using MailMessage mailMessage = MailMessageMimeParser.ParseMessage(rawMessage);
+            Headers = mailMessage.Headers;
+            FromAddress = new EmailAddress(mailMessage.From.Address);
+            ReplyToAddresses = mailMessage.ReplyToList
+                .Select(m => new EmailAddress(m.Address)).ToArray();
+            ToAddresses = mailMessage.To
+                .Select(m => new EmailAddress(m.Address)).ToArray();
+            CcAddresses = mailMessage.CC
+                .Select(m => new EmailAddress(m.Address)).ToArray();
+            BccAddresses = mailMessage.Bcc
+                .Select(m => new EmailAddress(m.Address)).ToArray();
+            MessageParts = mailMessage.Parts();
+            LocalIPAddress = rawSmtpMessage.LocalIPAddress;
+            LocalPort = rawSmtpMessage.LocalPort;
+            RemoteIPAddress = rawSmtpMessage.RemoteIPAddress;
+            RemotePort = rawSmtpMessage.RemotePort;
+            Subject = mailMessage.Subject;
         }
 
         /// <summary>Message data.</summary>
@@ -46,7 +48,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                return this.rawSmtpMessage.Data.ToString();
+                return rawSmtpMessage.Data.ToString();
             }
         }
 
@@ -75,9 +77,9 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("importance"))
+                if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("importance"))
                 {
-                    return this.Headers["importance"].ToString();
+                    return Headers["importance"].ToString();
                 }
                 else
                 {
@@ -118,9 +120,9 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("priority"))
+                if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("priority"))
                 {
-                    return this.Headers["priority"].ToString();
+                    return Headers["priority"].ToString();
                 }
                 else
                 {
@@ -168,6 +170,26 @@ namespace netDumbster.smtp
 
         /// <summary>
         /// The addresses that this message will be
+        /// delivered to in CC
+        /// </summary>
+        public EmailAddress[] CcAddresses
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// The addresses that this message will be
+        /// delivered to in BCC
+        /// </summary>
+        public EmailAddress[] BccAddresses
+        {
+            get;
+            private set;
+        }
+
+        /// <summary>
+        /// The addresses that this message will be
         /// replied to.
         /// </summary>
         public EmailAddress[] ReplyToAddresses
@@ -180,9 +202,9 @@ namespace netDumbster.smtp
         {
             get
             {
-                if (this.Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("x-priority"))
+                if (Headers.AllKeys.Select(k => k.ToLowerInvariant()).Contains("x-priority"))
                 {
-                    return this.Headers["x-priority"].ToString();
+                    return Headers["x-priority"].ToString();
                 }
                 else
                 {
