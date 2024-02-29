@@ -10,23 +10,23 @@ License: http://www.apache.org/licenses/LICENSE-2.0.html
 # Usage
 
 Create a netDumbster Server instance:
-````
+````csharp
 using var server = SimpleSmtpServer.Start(port);
 ````
 
 Check received email count:
-````
+````csharp
 var count = server.ReceivedEmailCount
 ````
 
 Get the body of the first email received:
-````
+````csharp
 var smtpMessage = server.ReceivedEmail[0];
 var body = smtpMessage.MessageParts[0].BodyData
 ```` 
 
 Subscribe to the message received event:
-````
+````csharp
 server.MessageReceived += (sender, args) =>
     {
         // Get message body.
