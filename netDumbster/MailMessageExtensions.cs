@@ -31,7 +31,7 @@ namespace netDumbster.smtp
                 parts.Add(part);
             }
 
-            return parts.ToArray();
+            return [.. parts];
         }
 
         private static string StreamToString(Stream stream)

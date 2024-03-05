@@ -26,7 +26,7 @@ namespace netDumbster.Test
 
         public override IEnumerable<object[]> GetData(MethodInfo testMethod)
         {
-            return Enumerable.Repeat(new object[0], times);
+            return Enumerable.Repeat(Array.Empty<object>(), times);
         }
     }
 

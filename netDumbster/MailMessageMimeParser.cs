@@ -14,7 +14,7 @@ namespace netDumbster.smtp
     {
         public static MailMessage ParseMessage(string mimeMail)
         {
-            var mimeMessage = MimeMessage.Load(new MemoryStream(UTF8Encoding.UTF8.GetBytes(mimeMail)));
+            var mimeMessage = MimeMessage.Load(new MemoryStream(Encoding.UTF8.GetBytes(mimeMail)));
 
             return mimeMessage.ConvertToMailMessage();
         }

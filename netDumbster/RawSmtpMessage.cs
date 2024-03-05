@@ -9,16 +9,16 @@ namespace netDumbster.smtp
 
     public class RawSmtpMessage
     {
-        List<EmailAddress> recipients;
+        readonly List<EmailAddress> recipients;
 
         public RawSmtpMessage(IPAddress localIPAddress, int localPort, IPAddress remoteIPAddress, int remotePort)
         {
-            this.Data = new StringBuilder();
-            this.recipients = new List<EmailAddress>();
-            this.LocalIPAddress = localIPAddress;
-            this.LocalPort = localPort;
-            this.RemoteIPAddress = remoteIPAddress;
-            this.RemotePort = remotePort;
+            Data = new StringBuilder();
+            recipients = [];
+            LocalIPAddress = localIPAddress;
+            LocalPort = localPort;
+            RemoteIPAddress = remoteIPAddress;
+            RemotePort = remotePort;
         }
 
         public StringBuilder Data
@@ -49,7 +49,7 @@ namespace netDumbster.smtp
         {
             get
             {
-                return this.recipients;
+                return recipients;
             }
         }
 
@@ -73,7 +73,7 @@ namespace netDumbster.smtp
 
         public void AddRecipient(EmailAddress recipient)
         {
-            this.recipients.Add(recipient);
+            recipients.Add(recipient);
         }
     }
 }
