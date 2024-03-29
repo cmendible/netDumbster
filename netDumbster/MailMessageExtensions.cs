@@ -17,13 +17,15 @@ public static class MailMessageExtensions
 
         foreach (AlternateView alternateView in mailMessage.AlternateViews)
         {
-            var part = new SmtpMessagePart(alternateView.ContentType.ToString(), StreamToString(alternateView.ContentStream));
+            var headers = GetAttachmentHeaders(alternateView);
+            var part = new SmtpMessagePart(headers, StreamToString(alternateView.ContentStream));
             parts.Add(part);
         }
 
         foreach (Attachment attachment in mailMessage.Attachments)
         {
-            var part = new SmtpMessagePart(attachment.ContentType.ToString(), StreamToString(attachment.ContentStream));
+            var headers = GetAttachmentHeaders(attachment);
+            var part = new SmtpMessagePart(headers, StreamToString(attachment.ContentStream));
             parts.Add(part);
         }
 
@@ -34,5 +36,32 @@ public static class MailMessageExtensions
     {
         var reader = new StreamReader(stream);
         return reader.ReadToEnd();
+    }
+
+    private static string GetAttachmentHeaders(AttachmentBase attachmentBase)
+    {
+        var headers = new StringBuilder();
+        if (!string.IsNullOrEmpty(attachmentBase.ContentType.ToString()))
+        {
+            headers.AppendLine($"Content-Type: {attachmentBase.ContentType.ToString()}");
+        }
+        if (!string.IsNullOrEmpty(attachmentBase.TransferEncoding.ToString()))
+        {
+            headers.AppendLine($"Content-Transfer-Encoding: {attachmentBase.TransferEncoding.ToString()}");
+        }
+        if (!string.IsNullOrEmpty(attachmentBase.ContentId.ToString()))
+        {
+            headers.AppendLine($"Content-ID: {attachmentBase.ContentId.ToString()}");
+        }
+
+        if (attachmentBase is Attachment attachment)
+        {
+            if (!string.IsNullOrEmpty(attachment.ContentDisposition.ToString()))
+            {
+                headers.AppendLine("Content-Disposition: " + attachment.ContentDisposition.ToString());
+            }
+        }
+
+        return headers.ToString();
     }
 }

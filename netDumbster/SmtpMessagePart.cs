@@ -9,9 +9,9 @@ namespace netDumbster.smtp;
 /// </summary>
 public class SmtpMessagePart
 {
-    public SmtpMessagePart(string header, string body)
+    public SmtpMessagePart(string headers, string body)
     {
-        HeaderData = header;
+        HeaderData = headers;
         BodyData = body;
     }
 
