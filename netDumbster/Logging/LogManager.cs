@@ -1,13 +1,10 @@
-﻿namespace netDumbster.smtp.Logging
+﻿namespace netDumbster.smtp.Logging;
+
+public class LogManager
 {
-    using System;
+    public static Func<Type, ILog> GetLogger = type => new EmptyLogger();
 
-    public class LogManager
+    public LogManager()
     {
-        public static Func<Type, ILog> GetLogger = type => new EmptyLogger();
-
-        public LogManager()
-        {
-        }
     }
 }

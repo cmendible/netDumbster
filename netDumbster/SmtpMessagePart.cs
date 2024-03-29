@@ -2,33 +2,32 @@
 // All rights reserved.
 // Modified by Carlos Mendible
 
-namespace netDumbster.smtp
+namespace netDumbster.smtp;
+
+/// <summary>
+/// Stores a single part of a multipart message.
+/// </summary>
+public class SmtpMessagePart
 {
-    /// <summary>
-    /// Stores a single part of a multipart message.
-    /// </summary>
-    public class SmtpMessagePart
+    public SmtpMessagePart(string header, string body)
     {
-        public SmtpMessagePart(string header, string body)
-        {
-            HeaderData = header;
-            BodyData = body;
-        }
+        HeaderData = header;
+        BodyData = body;
+    }
 
-        /// <summary>
-        /// The raw text that represents the actual mime part.
-        /// </summary>
-        public string BodyData
-        {
-            get;
-        }
+    /// <summary>
+    /// The raw text that represents the actual mime part.
+    /// </summary>
+    public string BodyData
+    {
+        get;
+    }
 
-        /// <summary>
-        /// The raw text that represents the header of the mime part.
-        /// </summary>
-        public string HeaderData
-        {
-            get;
-        }
+    /// <summary>
+    /// The raw text that represents the header of the mime part.
+    /// </summary>
+    public string HeaderData
+    {
+        get;
     }
 }

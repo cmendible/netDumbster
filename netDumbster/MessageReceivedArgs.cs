@@ -1,21 +1,18 @@
 ﻿// Copyright (c) 2010, Hexasystems Corporation
 // All rights reserved.
 
-namespace netDumbster.smtp
+namespace netDumbster.smtp;
+
+public class MessageReceivedArgs : EventArgs
 {
-    using System;
-
-    public class MessageReceivedArgs : EventArgs
+    public MessageReceivedArgs(SmtpMessage message)
     {
-        public MessageReceivedArgs(SmtpMessage message)
-        {
-            Message = message;
-        }
+        Message = message;
+    }
 
-        public SmtpMessage Message
-        {
-            get;
-            set;
-        }
+    public SmtpMessage Message
+    {
+        get;
+        set;
     }
 }

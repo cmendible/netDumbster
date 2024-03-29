@@ -1,26 +1,22 @@
 ﻿// Copyright (c) 2010, Hexasystems Corporation
 // All rights reserved.
-namespace netDumbster.Test
+namespace netDumbster.Test;
+
+public class LoopbackAdapterTests : TestsBase
 {
-    using System.Net;
-    using netDumbster.smtp;
-
-    public class LoopbackAdapterTests : TestsBase
+    protected override SimpleSmtpServer StartServer()
     {
-        protected override SimpleSmtpServer StartServer()
-        {
-            return Configuration.Configure()
-                .WithAddress(IPAddress.Loopback)
-                .Build();
-        }
-
-        protected override SimpleSmtpServer StartServer(int port)
-        {
-            return Configuration.Configure()
-                .WithAddress(IPAddress.Loopback)
-                .WithPort(port)
-                .Build();
-        }
-
+        return Configuration.Configure()
+            .WithAddress(IPAddress.Loopback)
+            .Build();
     }
+
+    protected override SimpleSmtpServer StartServer(int port)
+    {
+        return Configuration.Configure()
+            .WithAddress(IPAddress.Loopback)
+            .WithPort(port)
+            .Build();
+    }
+
 }
