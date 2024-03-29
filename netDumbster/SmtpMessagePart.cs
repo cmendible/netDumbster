@@ -4,8 +4,6 @@
 
 namespace netDumbster.smtp
 {
-    using System.Collections.Specialized;
-
     /// <summary>
     /// Stores a single part of a multipart message.
     /// </summary>
@@ -13,8 +11,8 @@ namespace netDumbster.smtp
     {
         public SmtpMessagePart(string header, string body)
         {
-            this.HeaderData = header;
-            this.BodyData = body;
+            HeaderData = header;
+            BodyData = body;
         }
 
         /// <summary>

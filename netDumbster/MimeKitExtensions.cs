@@ -10,8 +10,10 @@ namespace Extensions
     {
         static ContentType GetContentType(MimeKit.ContentType contentType)
         {
-            var ctype = new ContentType();
-            ctype.MediaType = string.Format("{0}/{1}", contentType.MediaType, contentType.MediaSubtype);
+            var ctype = new ContentType
+            {
+                MediaType = string.Format("{0}/{1}", contentType.MediaType, contentType.MediaSubtype)
+            };
 
             foreach (var param in contentType.Parameters)
                 ctype.Parameters.Add(param.Name, param.Value);
@@ -21,16 +23,12 @@ namespace Extensions
 
         static TransferEncoding GetTransferEncoding(MimeKit.ContentEncoding encoding)
         {
-            switch (encoding)
+            return encoding switch
             {
-                case MimeKit.ContentEncoding.QuotedPrintable:
-                case MimeKit.ContentEncoding.EightBit:
-                    return TransferEncoding.QuotedPrintable;
-                case MimeKit.ContentEncoding.SevenBit:
-                    return TransferEncoding.SevenBit;
-                default:
-                    return TransferEncoding.Base64;
-            }
+                MimeKit.ContentEncoding.QuotedPrintable or MimeKit.ContentEncoding.EightBit => TransferEncoding.QuotedPrintable,
+                MimeKit.ContentEncoding.SevenBit => TransferEncoding.SevenBit,
+                _ => TransferEncoding.Base64,
+            };
         }
 
         static void AddBodyPart(MailMessage message, MimeKit.MimeEntity entity)
@@ -39,10 +37,8 @@ namespace Extensions
             {
                 // FIXME: how should this be converted into a MailMessage?
             }
-            else if (entity is MimeKit.Multipart)
+            else if (entity is MimeKit.Multipart multipart)
             {
-                var multipart = (MimeKit.Multipart)entity;
-
                 if (multipart.ContentType.IsMimeType("multipart", "alternative"))
                 {
                     foreach (var part in multipart.OfType<MimeKit.MimePart>())
@@ -52,8 +48,10 @@ namespace Extensions
                         part.Content.DecodeTo(content);
                         content.Position = 0;
 
-                        var view = new AlternateView(content, GetContentType(part.ContentType));
-                        view.TransferEncoding = GetTransferEncoding(part.ContentTransferEncoding);
+                        var view = new AlternateView(content, GetContentType(part.ContentType))
+                        {
+                            TransferEncoding = GetTransferEncoding(part.ContentTransferEncoding)
+                        };
                         if (!string.IsNullOrEmpty(part.ContentId))
                             view.ContentId = part.ContentId;
 
@@ -70,7 +68,7 @@ namespace Extensions
             {
                 var part = (MimeKit.MimePart)entity;
 
-                if (part.IsAttachment || !string.IsNullOrEmpty(message.Body) || !(part is MimeKit.TextPart))
+                if (part.IsAttachment || !string.IsNullOrEmpty(message.Body) || part is not MimeKit.TextPart textPart)
                 {
                     // clone the content
                     var content = new MemoryStream();
@@ -96,7 +94,7 @@ namespace Extensions
                 else
                 {
                     message.IsBodyHtml = part.ContentType.IsMimeType("text", "html");
-                    message.Body = ((MimeKit.TextPart)part).Text;
+                    message.Body = textPart.Text;
                 }
             }
         }
@@ -108,17 +106,17 @@ namespace Extensions
 
         /// <summary>
         /// Explicit cast to convert a <see cref="MimeKit.MimeMessage"/> to a
-        /// <see cref="System.Net.Mail.MailMessage"/>.
+        /// <see cref="MailMessage"/>.
         /// </summary>
         /// <remarks>
-        /// <para>Casting a <see cref="MimeKit.MimeMessage"/> to a <see cref="System.Net.Mail.MailMessage"/>
-        /// makes it possible to use MimeKit with <see cref="System.Net.Mail.SmtpClient"/>.</para>
-        /// <para>It should be noted, however, that <see cref="System.Net.Mail.MailMessage"/>
+        /// <para>Casting a <see cref="MimeKit.MimeMessage"/> to a <see cref="MailMessage"/>
+        /// makes it possible to use MimeKit with <see cref="SmtpClient"/>.</para>
+        /// <para>It should be noted, however, that <see cref="MailMessage"/>
         /// cannot represent all MIME structures that can be constructed using MimeKit,
         /// so the conversion may not be perfect.</para>
         /// <para>A better approach would be to use MailKit's SmtpClient instead.</para>
         /// </remarks>
-        /// <returns>A <see cref="System.Net.Mail.MailMessage"/>.</returns>
+        /// <returns>A <see cref="MailMessage"/>.</returns>
         /// <param name="message">The message.</param>
         public static MailMessage ConvertToMailMessage(this MimeKit.MimeMessage message)
         {

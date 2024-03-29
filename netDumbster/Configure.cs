@@ -13,9 +13,9 @@
         /// </summary>
         internal Configuration()
         {
-            this.UseMessageStore = true;
-            this.IPAddress = IPAddress.Any;
-            this.ReuseAddress = true;
+            UseMessageStore = true;
+            IPAddress = IPAddress.Any;
+            ReuseAddress = true;
         }
 
         /// <summary>
@@ -74,16 +74,16 @@
         public SimpleSmtpServer Build()
         {
             var config = this;
-            if (this.Port == 0)
+            if (Port == 0)
             {
-                config = this.WithRandomPort();
+                config = WithRandomPort();
             }
             return SimpleSmtpServer.Start(config);
         }
 
         public Configuration DoNotReuseAddress()
         {
-            this.ReuseAddress = false;
+            ReuseAddress = false;
             return this;
         }
 
@@ -93,7 +93,7 @@
         /// <returns></returns>
         public Configuration WithRandomPort()
         {
-            this.Port = Configuration.GetRandomUnusedPort();
+            Port = GetRandomUnusedPort();
             return this;
         }
 
@@ -104,7 +104,7 @@
         /// <returns></returns>
         public Configuration WithPort(int port)
         {
-            this.Port = port;
+            Port = port;
             return this;
         }
 
@@ -115,7 +115,7 @@
         /// <returns></returns>
         public Configuration WithAddress(IPAddress address)
         {
-            this.IPAddress = address;
+            IPAddress = address;
             return this;
         }
 
@@ -126,7 +126,7 @@
         /// <returns></returns>
         public Configuration EnableMessageStore(bool enable)
         {
-            this.UseMessageStore = enable;
+            UseMessageStore = enable;
             return this;
         }
 
@@ -136,19 +136,11 @@
         /// <returns></returns>
         private static int GetRandomUnusedPort()
         {
-            try
-            {
-                var listener = new TcpListener(IPAddress.Any, 0);
-                listener.Start();
-                var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-                listener.Stop();
-                return port;
-            }
-            catch
-            {
-                throw;
-            }
+            var listener = new TcpListener(IPAddress.Any, 0);
+            listener.Start();
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+            return port;
         }
     }
-
 }

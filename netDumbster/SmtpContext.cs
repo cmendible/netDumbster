@@ -21,7 +21,7 @@ namespace netDumbster.smtp
         private const string EOL = "\r\n";
 
         /// <summary>Encoding to use to send/receive data from the socket.</summary>
-        private Encoding encoding;
+        private readonly Encoding encoding;
 
         /// <summary>
         /// It is possible that more than one line will be in
@@ -31,31 +31,31 @@ namespace netDumbster.smtp
         /// </summary>
         private StringBuilder inputBuffer;
 
-        IPEndPoint localEndPoint;
+        readonly IPEndPoint localEndPoint;
 
-        IPEndPoint remoteEndPoint;
+        readonly IPEndPoint remoteEndPoint;
 
-        ILog _Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        readonly ILog _Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
         /// <summary>
         /// Initialize this context for a given socket connection.
         /// </summary>
         public SmtpContext(Socket socket)
         {
-            this.ClientDomain = string.Empty;
-            this.LastCommand = -1;
-            this.Socket = socket;
+            ClientDomain = string.Empty;
+            LastCommand = -1;
+            Socket = socket;
 
             // Set the encoding to ASCII.
-            this.encoding = Encoding.ASCII;
+            encoding = Encoding.ASCII;
 
             // Initialize the input buffer
-            this.inputBuffer = new StringBuilder();
+            inputBuffer = new StringBuilder();
 
-            this.remoteEndPoint = (IPEndPoint)socket.RemoteEndPoint;
-            this.localEndPoint = (IPEndPoint)socket.LocalEndPoint;
+            remoteEndPoint = (IPEndPoint)socket.RemoteEndPoint;
+            localEndPoint = (IPEndPoint)socket.LocalEndPoint;
 
-            this.Message = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
+            Message = new RawSmtpMessage(localEndPoint.Address, localEndPoint.Port, remoteEndPoint.Address, remoteEndPoint.Port);
         }
 
         /// <summary>
@@ -95,10 +95,10 @@ namespace netDumbster.smtp
         /// </summary>
         public void Close()
         {
-            this._Log.Debug("Closing SmtpContext.");
-            this.inputBuffer.Length = 0;
-            this.Socket.Close();
-            this._Log.Debug("SmtpContext Closed.");
+            _Log.Debug("Closing SmtpContext.");
+            inputBuffer.Length = 0;
+            Socket.Close();
+            _Log.Debug("SmtpContext Closed.");
         }
 
         /// <summary>
@@ -109,7 +109,7 @@ namespace netDumbster.smtp
         {
             // If we already buffered another line, just return
             // from the buffer.
-            var output = this.ReadBuffer();
+            var output = ReadBuffer();
             if (output != null)
             {
                 return output;
@@ -123,16 +123,16 @@ namespace netDumbster.smtp
             do
             {
                 // Read the input data.
-                count = this.Socket.Receive(byteBuffer);
+                count = Socket.Receive(byteBuffer);
 
                 if (count == 0)
                 {
                     return null;
                 }
 
-                this.inputBuffer.Append(this.encoding.GetString(byteBuffer, 0, count));
+                inputBuffer.Append(encoding.GetString(byteBuffer, 0, count));
             }
-            while ((output = this.ReadBuffer()) == null);
+            while ((output = ReadBuffer()) == null);
 
             // IO Log statement is in ReadBuffer...
 
@@ -144,11 +144,11 @@ namespace netDumbster.smtp
         /// </summary>
         public void Reset()
         {
-            this._Log.Debug("Resetting SmtpContext.");
-            this.inputBuffer.Length = 0;
-            this.Message = new RawSmtpMessage(this.localEndPoint.Address, this.localEndPoint.Port, this.remoteEndPoint.Address, this.remoteEndPoint.Port);
-            this.LastCommand = SmtpProcessor.COMMAND_HELO;
-            this._Log.Debug("Done resetting SmtpContext.");
+            _Log.Debug("Resetting SmtpContext.");
+            inputBuffer.Length = 0;
+            Message = new RawSmtpMessage(localEndPoint.Address, localEndPoint.Port, remoteEndPoint.Address, remoteEndPoint.Port);
+            LastCommand = SmtpProcessor.COMMAND_HELO;
+            _Log.Debug("Done resetting SmtpContext.");
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace netDumbster.smtp
         /// <param name="data">The data to write the the client.</param>
         public void WriteLine(string data)
         {
-            this.Socket.Send(this.encoding.GetBytes(data + EOL));
+            Socket.Send(encoding.GetBytes(data + EOL));
         }
 
         /// <summary>
@@ -170,14 +170,14 @@ namespace netDumbster.smtp
         private string? ReadBuffer()
         {
             // If the buffer has data, check for a full line.
-            if (this.inputBuffer.Length > 0)
+            if (inputBuffer.Length > 0)
             {
-                var buffer = this.inputBuffer.ToString();
+                var buffer = inputBuffer.ToString();
                 var eolIndex = buffer.IndexOf(EOL);
                 if (eolIndex != -1)
                 {
                     var output = buffer.Substring(0, eolIndex);
-                    this.inputBuffer = new StringBuilder(buffer.Substring(eolIndex + 2));
+                    inputBuffer = new StringBuilder(buffer.Substring(eolIndex + 2));
                     return output;
                 }
             }
