@@ -14,6 +14,7 @@
     </Description>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <AssemblyOriginatorKeyFile>netDumbster.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -47,4 +48,7 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>
