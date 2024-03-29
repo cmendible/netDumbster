@@ -10,10 +10,11 @@
     <PackageProjectUrl>https://github.com/cmendible/netDumbster</PackageProjectUrl>
     <PackageTags>SMTP Tools UnitTest Fake</PackageTags>
     <Description>netDumbster is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)
-	netDumbster is based on the API of nDumbster (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
+    netDumbster is based on the API of nDumbster (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
     </Description>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
     <AssemblyOriginatorKeyFile>netDumbster.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -47,4 +48,7 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>
