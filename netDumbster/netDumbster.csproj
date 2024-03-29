@@ -6,7 +6,7 @@
     <PackageId>netDumbster</PackageId>
     <Title>netDumbster</Title>
     <Copyright>Copyright © Hexasystems Inc. 2017</Copyright>
-    <PackageLicenseExpression>APACHE-2.0</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/cmendible/netDumbster</PackageProjectUrl>
     <PackageTags>SMTP Tools UnitTest Fake</PackageTags>
     <Description>netDumbster is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)
