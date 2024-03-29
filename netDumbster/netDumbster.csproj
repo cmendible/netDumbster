@@ -6,11 +6,11 @@
     <PackageId>netDumbster</PackageId>
     <Title>netDumbster</Title>
     <Copyright>Copyright © Hexasystems Inc. 2017</Copyright>
-    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</PackageLicenseUrl>
+    <PackageLicenseExpression>APACHE-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/cmendible/netDumbster</PackageProjectUrl>
     <PackageTags>SMTP Tools UnitTest Fake</PackageTags>
     <Description>netDumbster is a .Net Fake SMTP Server clone of the popular Dumbster (http://quintanasoft.com/dumbster/)
-	netDumbster is based on the API of nDumbster (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
+    netDumbster is based on the API of nDumbster (http://ndumbster.sourceforge.net/default.html) and the nice C# Email Server (CSES) written by Eric Daugherty.
     </Description>
     <PackageReleaseNotes></PackageReleaseNotes>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
