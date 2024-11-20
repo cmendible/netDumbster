@@ -19,4 +19,20 @@ public class LoopbackAdapterTests : TestsBase
             .Build();
     }
 
+    protected override SimpleSmtpServer StartServer(bool useMessageStore)
+    {
+        return Configuration.Configure()
+            .WithAddress(IPAddress.Loopback)
+            .EnableMessageStore(useMessageStore)
+            .Build();
+    }
+
+    protected override SimpleSmtpServer StartServer(int port, bool useMessageStore)
+    {
+        return Configuration.Configure()
+            .WithAddress(IPAddress.Loopback)
+            .WithPort(port)
+            .EnableMessageStore(useMessageStore)
+            .Build();
+    }
 }

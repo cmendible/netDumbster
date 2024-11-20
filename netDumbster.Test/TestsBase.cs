@@ -20,6 +20,16 @@ public class TestsBase : IDisposable
         return SimpleSmtpServer.Start(port);
     }
 
+    protected virtual SimpleSmtpServer StartServer(bool useMessageStore)
+    {
+        return SimpleSmtpServer.Start(useMessageStore);
+    }
+
+    protected virtual SimpleSmtpServer StartServer(int port, bool useMessageStore)
+    {
+        return SimpleSmtpServer.Start(port, useMessageStore);
+    }
+
     [Fact]
     public void Subject_Is_Not_Empty()
     {
@@ -357,15 +367,17 @@ public class TestsBase : IDisposable
         server.Stop();
     }
 
-    [Fact]
-    public void Send_Fires_Message_Received_Event()
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Send_Fires_Message_Received_Event(bool useMessageStore)
     {
         int port = GetRandomUnusedPort();
-        SimpleSmtpServer fixedPortServer = StartServer(port);
+        SimpleSmtpServer fixedPortServer = StartServer(port, useMessageStore);
         fixedPortServer.MessageReceived += (sender, args) =>
         {
             Assert.NotNull(args.Message);
-            Assert.Equal(1, fixedPortServer.ReceivedEmailCount);
+            Assert.Equal(useMessageStore ? 1 : 0, fixedPortServer.ReceivedEmailCount);
             Assert.Equal("this is the body", args.Message.MessageParts[0].BodyData);
         };
 

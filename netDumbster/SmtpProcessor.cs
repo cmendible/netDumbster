@@ -189,18 +189,20 @@ public class SmtpProcessor
         }
 
         // Spool the message
-        if (smtpMessageStore is not null)
+        if (smtpMessageStore is not null || MessageReceived is not null)
         {
-            lock (smtpMessageStore)
+            var smtpMessage = new SmtpMessage(rawSmtpMessage);
+
+            if (smtpMessageStore is not null)
             {
-                var smtpMessage = new SmtpMessage(rawSmtpMessage);
-
-                smtpMessageStore.Add(smtpMessage);
-
-                if (MessageReceived is not null)
+                lock (smtpMessageStore)
                 {
-                    MessageReceived(this, new MessageReceivedArgs(smtpMessage));
+                    smtpMessageStore.Add(smtpMessage);
                 }
+            }
+            if (MessageReceived is not null)
+            {
+                MessageReceived(this, new MessageReceivedArgs(smtpMessage));
             }
         }
 
